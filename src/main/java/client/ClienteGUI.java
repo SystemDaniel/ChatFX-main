@@ -34,7 +34,7 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
     public void start(Stage primaryStage) {
         primaryStage.setTitle("ChatFX - Cliente de Transacciones Bancarias");
         primaryStage.setWidth(800);
-        primaryStage.setHeight(650);
+        primaryStage.setHeight(750);
 
         BorderPane root = new BorderPane();
 
@@ -256,7 +256,21 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
             return;
         }
 
-        cliente = new Cliente(nombre, this);
+        String host = campoHost.getText().trim();
+        if (host.isEmpty()) {
+            mostrarAlerta("Error", "Ingresa la IP del servidor");
+            return;
+        }
+
+        int puerto;
+        try {
+            puerto = Integer.parseInt(campoPuerto.getText().trim());
+        } catch (NumberFormatException e) {
+            mostrarAlerta("Error", "Puerto inválido");
+            return;
+        }
+
+        cliente = new Cliente(nombre, host, puerto, this);
         if (cliente.conectar()) {
             campoNombre.setDisable(true);
             btnConectar.setDisable(true);
