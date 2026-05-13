@@ -50,21 +50,6 @@ public class App extends Application {
         Scene scene = new Scene(root);
         primaryStage.setScene(scene);
         primaryStage.show();
-
-        try {
-            ServidorGUI servidor = new ServidorGUI();
-            Stage ventanaServidor = new Stage();
-            servidor.start(ventanaServidor);
-            ventanaServidor.setOnCloseRequest(event -> servidor.detenerServidor());
-
-            primaryStage.setOnCloseRequest(event -> {
-                servidor.detenerServidor();
-                ventanaServidor.close();
-            });
-        } catch (Exception e) {
-            System.err.println("[ERROR] No se pudo iniciar servidor automático: " + e.getMessage());
-            e.printStackTrace();
-        }
     }
 
     private void iniciarServidor() {

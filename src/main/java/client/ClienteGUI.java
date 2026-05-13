@@ -1,5 +1,6 @@
 package client;
 
+import protocol.Frame;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -23,12 +24,17 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
     private Label estadoLabel;
     private Cliente cliente;
     private boolean conectado = false;
+    
+    // Botones de transacciones
+    private Button btnDeposito;
+    private Button btnRetiro;
+    private Button btnConsulta;
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setTitle("ChatFX - Cliente");
-        primaryStage.setWidth(600);
-        primaryStage.setHeight(500);
+        primaryStage.setTitle("ChatFX - Cliente de Transacciones Bancarias");
+        primaryStage.setWidth(800);
+        primaryStage.setHeight(650);
 
         BorderPane root = new BorderPane();
 
@@ -36,9 +42,9 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
         HBox panelConexion = crearPanelConexion();
         root.setTop(panelConexion);
 
-        // Panel central - Chat
-        VBox panelChat = crearPanelChat();
-        root.setCenter(panelChat);
+        // Panel central - Chat y Transacciones
+        HBox panelCentral = crearPanelCentral();
+        root.setCenter(panelCentral);
 
         // Panel inferior - Envío de mensajes
         HBox panelEnvio = crearPanelEnvio();
@@ -92,23 +98,128 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
         return panel;
     }
 
-    private VBox crearPanelChat() {
-        VBox panel = new VBox();
+    private HBox crearPanelCentral() {
+        HBox panel = new HBox(10);
         panel.setPadding(new Insets(10));
 
-        Label titulo = new Label("Chat");
+        // Panel izquierdo - Chat
+        VBox panelChat = crearPanelChat();
+        
+        // Panel derecho - Transacciones
+        VBox panelTransacciones = crearPanelTransacciones();
+
+        panel.getChildren().addAll(panelChat, new Separator(javafx.geometry.Orientation.VERTICAL), panelTransacciones);
+        HBox.setHgrow(panelChat, Priority.ALWAYS);
+
+        return panel;
+    }
+
+    private VBox crearPanelChat() {
+        VBox panel = new VBox();
+
+        Label titulo = new Label("Chat y Notificaciones");
         titulo.setStyle("-fx-font-size: 14; -fx-font-weight: bold;");
 
         areaChat = new TextArea();
         areaChat.setEditable(false);
         areaChat.setWrapText(true);
-        areaChat.setStyle("-fx-font-size: 12; -fx-control-inner-background: #f5f5f5;");
+        areaChat.setStyle("-fx-font-size: 11; -fx-control-inner-background: #f5f5f5;");
 
         ScrollPane scroll = new ScrollPane(areaChat);
         scroll.setFitToWidth(true);
 
         panel.getChildren().addAll(titulo, scroll);
         VBox.setVgrow(scroll, Priority.ALWAYS);
+
+        return panel;
+    }
+
+    private VBox crearPanelTransacciones() {
+        VBox panel = new VBox(10);
+        panel.setPrefWidth(280);
+        panel.setStyle("-fx-border-color: #e0e0e0; -fx-border-width: 1; -fx-padding: 10;");
+
+        Label titulo = new Label("Operaciones Bancarias");
+        titulo.setStyle("-fx-font-size: 14; -fx-font-weight: bold;");
+
+        // Campos para transacciones
+        Label lblCuenta = new Label("Número de Cuenta:");
+        TextField campoCuenta = new TextField();
+        campoCuenta.setPromptText("Ej: 12345");
+        campoCuenta.setText("12345");
+
+        Label lblMonto = new Label("Monto:");
+        TextField campoMonto = new TextField();
+        campoMonto.setPromptText("Ej: 100.00");
+
+        // Botones de operaciones
+        btnDeposito = new Button("DEPÓSITO");
+        btnDeposito.setPrefWidth(130);
+        btnDeposito.setStyle("-fx-font-size: 11; -fx-padding: 8; -fx-background-color: #4CAF50; -fx-text-fill: white;");
+        btnDeposito.setDisable(true);
+        btnDeposito.setOnAction(e -> {
+            try {
+                long cuenta = Long.parseLong(campoCuenta.getText().trim());
+                double monto = Double.parseDouble(campoMonto.getText().trim());
+                cliente.enviarDeposito(cuenta, monto);
+            } catch (NumberFormatException ex) {
+                mostrarAlerta("Error", "Datos inválidos");
+            }
+        });
+
+        btnRetiro = new Button("RETIRO");
+        btnRetiro.setPrefWidth(130);
+        btnRetiro.setStyle("-fx-font-size: 11; -fx-padding: 8; -fx-background-color: #f44336; -fx-text-fill: white;");
+        btnRetiro.setDisable(true);
+        btnRetiro.setOnAction(e -> {
+            try {
+                long cuenta = Long.parseLong(campoCuenta.getText().trim());
+                double monto = Double.parseDouble(campoMonto.getText().trim());
+                cliente.enviarRetiro(cuenta, monto);
+            } catch (NumberFormatException ex) {
+                mostrarAlerta("Error", "Datos inválidos");
+            }
+        });
+
+        btnConsulta = new Button("CONSULTA");
+        btnConsulta.setPrefWidth(130);
+        btnConsulta.setStyle("-fx-font-size: 11; -fx-padding: 8; -fx-background-color: #2196F3; -fx-text-fill: white;");
+        btnConsulta.setDisable(true);
+        btnConsulta.setOnAction(e -> {
+            try {
+                long cuenta = Long.parseLong(campoCuenta.getText().trim());
+                cliente.enviarConsulta(cuenta);
+            } catch (NumberFormatException ex) {
+                mostrarAlerta("Error", "Datos inválidos");
+            }
+        });
+
+        HBox botones1 = new HBox(5);
+        botones1.getChildren().addAll(btnDeposito, btnRetiro);
+
+        HBox botones2 = new HBox(5);
+        botones2.getChildren().addAll(btnConsulta);
+
+        // Información de cuentas disponibles
+        Label lblInfo = new Label("Cuentas de Prueba:");
+        lblInfo.setStyle("-fx-font-size: 11; -fx-font-weight: bold;");
+        
+        TextArea areaCuentas = new TextArea();
+        areaCuentas.setEditable(false);
+        areaCuentas.setWrapText(true);
+        areaCuentas.setPrefHeight(120);
+        areaCuentas.setStyle("-fx-font-size: 10; -fx-control-inner-background: #f9f9f9;");
+        areaCuentas.setText("Cuenta: 12345\nTitular: Juan Pérez\nSaldo: $5,000.00\n\nCuenta: 54321\nTitular: María García\nSaldo: $3,500.00\n\nCuenta: 99999\nTitular: Carlos López\nSaldo: $10,000.00");
+
+        panel.getChildren().addAll(
+            titulo,
+            lblCuenta, campoCuenta,
+            lblMonto, campoMonto,
+            new Separator(),
+            botones1, botones2,
+            new Separator(),
+            lblInfo, areaCuentas
+        );
 
         return panel;
     }
@@ -152,7 +263,10 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
             btnDesconectar.setDisable(false);
             campoMensaje.setDisable(false);
             btnEnviar.setDisable(false);
+            
+            // Habilitar botones de transacciones
             areaChat.appendText("[INFO] Conectado como: " + nombre + "\n");
+            areaChat.appendText("[INFO] Sistema de transacciones bancarias activo\n");
         } else {
             mostrarAlerta("Error", "No se pudo conectar al servidor");
         }
@@ -190,15 +304,42 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
     }
 
     @Override
+    public void onTramaRecibida(Frame frame) {
+        Platform.runLater(() -> {
+            String respuesta = formatearTramaParaMostrar(frame);
+            areaChat.appendText(respuesta + "\n");
+        });
+    }
+
+    @Override
     public void onConexionCambiada(boolean conectado) {
         Platform.runLater(() -> {
             this.conectado = conectado;
             if (conectado) {
                 estadoLabel.setText("Estado: Conectado");
                 estadoLabel.setStyle("-fx-font-size: 12; -fx-text-fill: green;");
+                
+                // Habilitar botones de transacciones
+                btnDeposito.setDisable(false);
+                btnRetiro.setDisable(false);
+                btnConsulta.setDisable(false);
+                
+                campoNombre.setDisable(true);
+                btnConectar.setDisable(true);
+                btnDesconectar.setDisable(false);
+                campoMensaje.setDisable(false);
+                btnEnviar.setDisable(false);
+                areaChat.appendText("[INFO] Conectado como: " + campoNombre.getText() + "\n");
+                areaChat.appendText("[INFO] Sistema de transacciones bancarias activo\n");
             } else {
                 estadoLabel.setText("Estado: Desconectado");
                 estadoLabel.setStyle("-fx-font-size: 12; -fx-text-fill: red;");
+                
+                // Deshabilitar botones de transacciones
+                btnDeposito.setDisable(true);
+                btnRetiro.setDisable(true);
+                btnConsulta.setDisable(true);
+                
                 campoNombre.setDisable(false);
                 btnConectar.setDisable(false);
                 btnDesconectar.setDisable(true);
@@ -207,6 +348,60 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
                 areaChat.appendText("[INFO] Desconectado del servidor\n");
             }
         });
+    }
+
+    @Override
+    public void onError(String error) {
+        Platform.runLater(() -> {
+            areaChat.appendText("[ERROR] " + error + "\n");
+        });
+    }
+
+    /**
+     * Formatea una trama para mostrarla de manera legible
+     */
+    private String formatearTramaParaMostrar(Frame frame) {
+        StringBuilder sb = new StringBuilder();
+        String tipo = frame.getTipo();
+
+        if ("RESPUESTA".equals(tipo)) {
+            String estado = frame.obtener("ESTADO");
+            String mensaje = frame.obtener("MENSAJE");
+            
+            sb.append("[RESPUESTA] ");
+            if ("OK".equals(estado)) {
+                sb.append("✓ ").append(mensaje);
+                
+                if (frame.existe("CUENTA")) {
+                    sb.append(" | Cuenta: ").append(frame.obtener("CUENTA"));
+                }
+                if (frame.existe("SALDO")) {
+                    sb.append(" | Saldo: $").append(frame.obtener("SALDO"));
+                }
+                if (frame.existe("MONTO_DEPOSITADO")) {
+                    sb.append(" | Monto Depositado: $").append(frame.obtener("MONTO_DEPOSITADO"));
+                }
+                if (frame.existe("MONTO_RETIRADO")) {
+                    sb.append(" | Monto Retirado: $").append(frame.obtener("MONTO_RETIRADO"));
+                }
+            } else {
+                sb.append("✗ ").append(mensaje);
+                if (frame.existe("CODIGO")) {
+                    sb.append(" [").append(frame.obtener("CODIGO")).append("]");
+                }
+            }
+        } else if ("NOTIFICACION".equals(tipo)) {
+            String tipoNotif = frame.obtener("TIPO");
+            String usuario = frame.obtener("USUARIO");
+            sb.append("[NOTIFICACIÓN] ").append(usuario).append(" se ha ").append(tipoNotif.toLowerCase());
+        } else {
+            sb.append("[").append(tipo).append("] ");
+            for (var entry : frame.getCampos().entrySet()) {
+                sb.append(entry.getKey()).append(": ").append(entry.getValue()).append(" ");
+            }
+        }
+
+        return sb.toString();
     }
 
     public static void main(String[] args) {

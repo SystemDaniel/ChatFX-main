@@ -1,5 +1,8 @@
 package server;
 
+import protocol.Frame;
+import protocol.FrameParser;
+import protocol.TransactionProcessor;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -25,12 +28,15 @@ public class ServidorGUI extends Application {
     private Set<ClientHandlerGUI> clientes = Collections.synchronizedSet(new HashSet<>());
     private ServerSocket serverSocket;
     private boolean activo = false;
+    private TransactionProcessor processor;
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setTitle("ChatFX - Servidor");
-        primaryStage.setWidth(800);
-        primaryStage.setHeight(600);
+        primaryStage.setTitle("ChatFX - Servidor de Transacciones Bancarias");
+        primaryStage.setWidth(900);
+        primaryStage.setHeight(650);
+
+        processor = new TransactionProcessor();
 
         BorderPane root = new BorderPane();
 
@@ -38,23 +44,8 @@ public class ServidorGUI extends Application {
         VBox topPanel = crearPanelSuperior();
         root.setTop(topPanel);
 
-        // Panel central - Log
-        logArea = new TextArea();
-        logArea.setEditable(false);
-        logArea.setWrapText(true);
-        logArea.setPrefHeight(400);
-        
-        ScrollPane scrollLog = new ScrollPane(logArea);
-        scrollLog.setFitToWidth(true);
-
-        // Panel derecho - Lista de clientes
-        VBox rightPanel = crearPanelDeClientes();
-
-        HBox centerBox = new HBox(10);
-        centerBox.setPadding(new Insets(10));
-        centerBox.getChildren().addAll(scrollLog, rightPanel);
-        HBox.setHgrow(scrollLog, javafx.scene.layout.Priority.ALWAYS);
-
+        // Panel central - Log y Transacciones
+        HBox centerBox = crearPanelCentral();
         root.setCenter(centerBox);
 
         Scene scene = new Scene(root);
@@ -62,7 +53,8 @@ public class ServidorGUI extends Application {
         primaryStage.setOnCloseRequest(event -> detenerServidor());
         primaryStage.show();
 
-        log("[INFO] Servidor iniciado. Iniciando servicio automáticamente...");
+        log("[INFO] Servidor de Transacciones Iniciado");
+        log("[INFO] Iniciando servicio automáticamente...");
         iniciarServidor();
     }
 
@@ -83,7 +75,7 @@ public class ServidorGUI extends Application {
         btnDetener.setDisable(true);
         btnDetener.setOnAction(e -> detenerServidor());
 
-        btnAbrirChat = new Button("Abrir Chat");
+        btnAbrirChat = new Button("Abrir Cliente");
         btnAbrirChat.setStyle("-fx-font-size: 12; -fx-padding: 8;");
         btnAbrirChat.setOnAction(e -> abrirCliente());
 
@@ -101,10 +93,36 @@ public class ServidorGUI extends Application {
         return panel;
     }
 
+    private HBox crearPanelCentral() {
+        HBox centerBox = new HBox(10);
+        centerBox.setPadding(new Insets(10));
+
+        // Panel izquierdo - Log
+        logArea = new TextArea();
+        logArea.setEditable(false);
+        logArea.setWrapText(true);
+        logArea.setPrefHeight(400);
+        logArea.setStyle("-fx-font-size: 11;");
+        
+        ScrollPane scrollLog = new ScrollPane(logArea);
+        scrollLog.setFitToWidth(true);
+
+        // Panel central - Clientes
+        VBox panelClientes = crearPanelDeClientes();
+
+        // Panel derecho - Cuentas
+        VBox panelCuentas = crearPanelDeCuentas();
+
+        centerBox.getChildren().addAll(scrollLog, panelClientes, panelCuentas);
+        HBox.setHgrow(scrollLog, javafx.scene.layout.Priority.ALWAYS);
+
+        return centerBox;
+    }
+
     private VBox crearPanelDeClientes() {
         VBox panel = new VBox(10);
         panel.setPadding(new Insets(10));
-        panel.setStyle("-fx-border-color: #cccccc; -fx-border-width: 0 0 0 1;");
+        panel.setStyle("-fx-border-color: #e0e0e0; -fx-border-width: 1;");
         panel.setPrefWidth(200);
 
         Label titulo = new Label("Clientes Conectados");
@@ -117,6 +135,45 @@ public class ServidorGUI extends Application {
         contadorLabel.setStyle("-fx-font-size: 12;");
 
         panel.getChildren().addAll(titulo, listaClientes, contadorLabel);
+        return panel;
+    }
+
+    private VBox crearPanelDeCuentas() {
+        VBox panel = new VBox(10);
+        panel.setPadding(new Insets(10));
+        panel.setStyle("-fx-border-color: #e0e0e0; -fx-border-width: 1;");
+        panel.setPrefWidth(250);
+
+        Label titulo = new Label("Cuentas Bancarias");
+        titulo.setStyle("-fx-font-size: 14; -fx-font-weight: bold;");
+
+        TextArea areaCuentas = new TextArea();
+        areaCuentas.setEditable(false);
+        areaCuentas.setWrapText(true);
+        areaCuentas.setStyle("-fx-font-size: 10; -fx-control-inner-background: #f9f9f9;");
+
+        // Cargar información de cuentas
+        StringBuilder sb = new StringBuilder();
+        for (var cuenta : processor.obtenerTodasLasCuentas()) {
+            sb.append(String.format("Cuenta: %d\nTitular: %s\nSaldo: $%.2f\n\n", 
+                cuenta.getNumero(), cuenta.getTitular(), cuenta.getSaldo()));
+        }
+        areaCuentas.setText(sb.toString());
+
+        Button btnRefrescar = new Button("Actualizar");
+        btnRefrescar.setPrefWidth(150);
+        btnRefrescar.setStyle("-fx-font-size: 11; -fx-padding: 8;");
+        btnRefrescar.setOnAction(e -> {
+            sb.setLength(0);
+            for (var cuenta : processor.obtenerTodasLasCuentas()) {
+                sb.append(String.format("Cuenta: %d\nTitular: %s\nSaldo: $%.2f\n\n", 
+                    cuenta.getNumero(), cuenta.getTitular(), cuenta.getSaldo()));
+            }
+            areaCuentas.setText(sb.toString());
+        });
+
+        panel.getChildren().addAll(titulo, areaCuentas, btnRefrescar);
+        VBox.setVgrow(areaCuentas, javafx.scene.layout.Priority.ALWAYS);
         return panel;
     }
 
@@ -139,11 +196,12 @@ public class ServidorGUI extends Application {
                     estadoLabel.setText("Estado: Activo");
                     estadoLabel.setStyle("-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: green;");
                     log("[INFO] Servidor escuchando en puerto " + puertoServidor);
+                    log("[INFO] Sistema de transacciones bancarias activo");
                 });
 
                 while (activo) {
                     Socket clienteSocket = serverSocket.accept();
-                    ClientHandlerGUI handler = new ClientHandlerGUI(clienteSocket, this);
+                    ClientHandlerGUI handler = new ClientHandlerGUI(clienteSocket, this, processor);
                     clientes.add(handler);
                     new Thread(handler).start();
                 }
@@ -204,6 +262,14 @@ public class ServidorGUI extends Application {
         }
     }
 
+    public synchronized void difundirTrama(Frame trama, ClientHandlerGUI remitente) {
+        for (ClientHandlerGUI cliente : clientes) {
+            if (cliente != remitente) {
+                cliente.enviarTrama(trama);
+            }
+        }
+    }
+
     public synchronized void removerCliente(ClientHandlerGUI cliente) {
         clientes.remove(cliente);
         actualizarListaClientes();
@@ -215,7 +281,7 @@ public class ServidorGUI extends Application {
             Stage ventanaCliente = new Stage();
             clienteGUI.start(ventanaCliente);
         } catch (Exception e) {
-            log("[ERROR] No se pudo abrir chat: " + e.getMessage());
+            log("[ERROR] No se pudo abrir cliente: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -231,10 +297,12 @@ class ClientHandlerGUI implements Runnable {
     private BufferedReader entrada;
     private String nombre;
     private ServidorGUI servidor;
+    private TransactionProcessor processor;
 
-    public ClientHandlerGUI(Socket socket, ServidorGUI servidor) {
+    public ClientHandlerGUI(Socket socket, ServidorGUI servidor, TransactionProcessor processor) {
         this.socket = socket;
         this.servidor = servidor;
+        this.processor = processor;
         try {
             salida = new PrintWriter(socket.getOutputStream(), true);
             entrada = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -246,18 +314,31 @@ class ClientHandlerGUI implements Runnable {
     @Override
     public void run() {
         try {
-            nombre = entrada.readLine();
+            String primeraLinea = entrada.readLine();
+            
+            if (primeraLinea != null && primeraLinea.startsWith("<INICIO>")) {
+                Frame registroFrame = FrameParser.parsear(primeraLinea);
+                if (registroFrame != null && registroFrame.getTipo().equals("REGISTRO")) {
+                    this.nombre = registroFrame.obtener("USUARIO");
+                } else {
+                    this.nombre = "Cliente_" + System.currentTimeMillis() % 1000;
+                }
+            } else {
+                this.nombre = primeraLinea != null ? primeraLinea : "Cliente_" + System.currentTimeMillis() % 1000;
+            }
+            
             servidor.log("[CONEXIÓN] " + nombre + " conectado desde " + socket.getInetAddress().getHostAddress());
             servidor.actualizarListaClientes();
-            servidor.difundirMensaje("[SISTEMA] " + nombre + " se ha conectado", this);
+            
+            Frame notificacion = new Frame("NOTIFICACION")
+                .campo("TIPO", "CONEXION")
+                .campo("USUARIO", nombre)
+                .campo("MENSAJE", nombre + " se ha conectado");
+            servidor.difundirTrama(notificacion, this);
 
-            String mensaje;
-            while ((mensaje = entrada.readLine()) != null) {
-                if (mensaje.equals("DESCONECTAR")) {
-                    break;
-                }
-                servidor.log("[" + nombre + "]: " + mensaje);
-                servidor.difundirMensaje("[" + nombre + "]: " + mensaje, this);
+            String linea;
+            while ((linea = entrada.readLine()) != null) {
+                procesarLinea(linea);
             }
         } catch (IOException e) {
             servidor.log("[ERROR] Conexión perdida con " + nombre);
@@ -268,13 +349,95 @@ class ClientHandlerGUI implements Runnable {
                 e.printStackTrace();
             }
             servidor.removerCliente(this);
-            servidor.difundirMensaje("[SISTEMA] " + nombre + " se ha desconectado", this);
+            Frame notificacion = new Frame("NOTIFICACION")
+                .campo("TIPO", "DESCONEXION")
+                .campo("USUARIO", nombre);
+            servidor.difundirTrama(notificacion, this);
             servidor.log("[DESCONEXIÓN] " + nombre + " desconectado");
         }
     }
 
+    private void procesarLinea(String linea) {
+        if (linea == null || linea.isEmpty()) {
+            return;
+        }
+
+        if (linea.startsWith("<INICIO>")) {
+            Frame frame = FrameParser.parsear(linea);
+            if (frame == null) {
+                Frame error = new Frame("RESPUESTA")
+                    .campo("ESTADO", "ERROR")
+                    .campo("MENSAJE", "Trama mal formada")
+                    .campo("CODIGO", "TRAMA_INVALIDA");
+                enviarTrama(error);
+                servidor.log("[ERROR] Trama mal formada de " + nombre);
+                return;
+            }
+
+            procesarTrama(frame);
+        } else {
+            if (linea.equals("DESCONECTAR")) {
+                return;
+            }
+            servidor.log("[" + nombre + "]: " + linea);
+            servidor.difundirMensaje("[" + nombre + "]: " + linea, this);
+        }
+    }
+
+    private void procesarTrama(Frame trama) {
+        servidor.log("[TRAMA] Tipo: " + trama.getTipo() + " De: " + nombre);
+        
+        switch (trama.getTipo().toUpperCase()) {
+            case "DEPOSITO":
+            case "RETIRO":
+            case "CONSULTA":
+            case "TRANSFERENCIA":
+                procesarTransaccion(trama);
+                break;
+            
+            case "DESCONEXION":
+                servidor.log("[DESCONEXION] " + nombre + " solicitó desconexión");
+                break;
+            
+            default:
+                Frame respuesta = new Frame("RESPUESTA")
+                    .campo("ESTADO", "ERROR")
+                    .campo("MENSAJE", "Tipo de operación no soportada: " + trama.getTipo())
+                    .campo("CODIGO", "OPERACION_NO_SOPORTADA");
+                enviarTrama(respuesta);
+                break;
+        }
+    }
+
+    private void procesarTransaccion(Frame trama) {
+        Frame respuesta = processor.procesarTrama(trama);
+        enviarTrama(respuesta);
+        logTransaccion(trama, respuesta);
+    }
+
+    private void logTransaccion(Frame solicitud, Frame respuesta) {
+        StringBuilder log = new StringBuilder();
+        log.append("[TRANSACCION] ");
+        log.append("Usuario: ").append(nombre).append(" | ");
+        log.append("Tipo: ").append(solicitud.getTipo()).append(" | ");
+        log.append("Estado: ").append(respuesta.obtener("ESTADO")).append(" | ");
+        log.append("Mensaje: ").append(respuesta.obtener("MENSAJE"));
+        
+        if (respuesta.existe("CUENTA")) {
+            log.append(" | Cuenta: ").append(respuesta.obtener("CUENTA"));
+        }
+        
+        servidor.log(log.toString());
+    }
+
     public void enviarMensaje(String mensaje) {
         salida.println(mensaje);
+    }
+
+    public void enviarTrama(Frame trama) {
+        if (salida != null && trama != null) {
+            salida.println(trama.toString());
+        }
     }
 
     public String getNombre() {
