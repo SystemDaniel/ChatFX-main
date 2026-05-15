@@ -11,9 +11,14 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import app.AccountNumberGenerator;
+import app.VoucherGenerator;
+import java.io.File;
 
 public class ClienteGUI extends Application implements Cliente.ClienteListener {
     private TextArea areaChat;
+    private VBox panelMensajes;
+    private ScrollPane scrollMensajes;
     private TextField campoMensaje;
     private TextField campoNombre;
     private TextField campoHost;
@@ -24,15 +29,38 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
     private Label estadoLabel;
     private Cliente cliente;
     private boolean conectado = false;
+    private String usuarioAutenticado;
     
     // Botones de transacciones
     private Button btnDeposito;
     private Button btnRetiro;
     private Button btnConsulta;
+    private Button btnVoucher;
+    
+    // Variables de transacción (para generar voucher)
+    private String ultimoNumeroTransaccion = "";
+    private String ultimoTipoOperacion = "";
+    private double ultimoMonto = 0;
+    private double ultimoSaldoAnterior = 0;
+    private double ultimoSaldoNuevo = 0;
+    private File ultimoArchivoVoucher = null;
+    
+    // Número de cuenta único
+    private String numeroCuentaUsuario = "";
+
+    public ClienteGUI() {
+        this.usuarioAutenticado = null;
+        this.numeroCuentaUsuario = AccountNumberGenerator.generarNumeroCuenta();
+    }
+
+    public ClienteGUI(String usuario) {
+        this.usuarioAutenticado = usuario;
+        this.numeroCuentaUsuario = AccountNumberGenerator.generarNumeroCuenta();
+    }
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setTitle("ChatFX - Cliente de Transacciones Bancarias");
+        primaryStage.setTitle("MercadoCentro - Cliente de Transacciones Bancarias");
         primaryStage.setWidth(800);
         primaryStage.setHeight(650);
 
@@ -60,11 +88,17 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
         panel.setPadding(new Insets(10));
         panel.setStyle("-fx-border-color: #cccccc; -fx-border-width: 0 0 1 0;");
 
-        Label lblNombre = new Label("Nombre:");
+        Label lblNombre = new Label("Usuario:");
         campoNombre = new TextField();
         campoNombre.setPromptText("Tu nombre de usuario");
         campoNombre.setPrefWidth(140);
-        campoNombre.setText("Usuario" + System.currentTimeMillis() % 1000);
+        if (usuarioAutenticado != null) {
+            campoNombre.setText(usuarioAutenticado);
+            campoNombre.setEditable(false);
+            campoNombre.setStyle("-fx-opacity: 0.8;");
+        } else {
+            campoNombre.setText("Usuario" + System.currentTimeMillis() % 1000);
+        }
 
         Label lblHost = new Label("IP:");
         campoHost = new TextField();
@@ -120,18 +154,58 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
         Label titulo = new Label("Chat y Notificaciones");
         titulo.setStyle("-fx-font-size: 14; -fx-font-weight: bold;");
 
-        areaChat = new TextArea();
-        areaChat.setEditable(false);
-        areaChat.setWrapText(true);
-        areaChat.setStyle("-fx-font-size: 11; -fx-control-inner-background: #f5f5f5;");
+        // VBox para las burbujas de mensajes
+        panelMensajes = new VBox(8);
+        panelMensajes.setPadding(new Insets(10));
+        panelMensajes.setStyle("-fx-background-color: #ffffff;");
+        panelMensajes.setFillWidth(false);
 
-        ScrollPane scroll = new ScrollPane(areaChat);
-        scroll.setFitToWidth(true);
+        scrollMensajes = new ScrollPane(panelMensajes);
+        scrollMensajes.setFitToWidth(true);
+        scrollMensajes.setStyle("-fx-control-inner-background: #ffffff;");
 
-        panel.getChildren().addAll(titulo, scroll);
-        VBox.setVgrow(scroll, Priority.ALWAYS);
+        panel.getChildren().addAll(titulo, scrollMensajes);
+        VBox.setVgrow(scrollMensajes, Priority.ALWAYS);
 
         return panel;
+    }
+
+    private void agregarMensajeBurbuja(String nombre, String mensaje, boolean esPropio) {
+        HBox contenedor = new HBox();
+        contenedor.setPadding(new Insets(5, 10, 5, 10));
+
+        Label labelMensaje = new Label(mensaje);
+        labelMensaje.setStyle(
+            "-fx-font-size: 12;" +
+            "-fx-text-fill: #000000;" +
+            "-fx-wrap-text: true;" +
+            "-fx-padding: 10;" +
+            "-fx-background-color: #ADD8E6;" +
+            "-fx-background-radius: 10;" +
+            "-fx-border-radius: 10;"
+        );
+        labelMensaje.setWrapText(true);
+        labelMensaje.setMaxWidth(300);
+
+        if (esPropio) {
+            // Mensajes propios a la derecha
+            HBox.setHgrow(new Label(""), Priority.ALWAYS);
+            contenedor.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
+            contenedor.getChildren().add(labelMensaje);
+        } else {
+            // Mensajes de otros a la izquierda
+            Label labelNombre = new Label(nombre + ": ");
+            labelNombre.setStyle("-fx-font-size: 10; -fx-font-weight: bold; -fx-text-fill: #666666;");
+            
+            VBox vboxMensaje = new VBox(2);
+            vboxMensaje.getChildren().addAll(labelNombre, labelMensaje);
+            
+            contenedor.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            contenedor.getChildren().add(vboxMensaje);
+        }
+
+        panelMensajes.getChildren().add(contenedor);
+        scrollMensajes.setVvalue(1.0);
     }
 
     private VBox crearPanelTransacciones() {
@@ -142,11 +216,21 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
         Label titulo = new Label("Operaciones Bancarias");
         titulo.setStyle("-fx-font-size: 14; -fx-font-weight: bold;");
 
+        // Mostrar número de cuenta del usuario (inmutable)
+        Label lblMiCuenta = new Label("Mi Número de Cuenta:");
+        lblMiCuenta.setStyle("-fx-font-size: 11; -fx-font-weight: bold; -fx-text-fill: #2196F3;");
+        
+        TextField campoMiCuenta = new TextField();
+        campoMiCuenta.setText(numeroCuentaUsuario);
+        campoMiCuenta.setEditable(false);
+        campoMiCuenta.setStyle("-fx-font-size: 12; -fx-padding: 8; -fx-opacity: 0.8; -fx-control-inner-background: #e8f4f8;");
+        campoMiCuenta.setPrefHeight(32);
+
         // Campos para transacciones
-        Label lblCuenta = new Label("Número de Cuenta:");
+        Label lblCuenta = new Label("Cuenta Destino:");
         TextField campoCuenta = new TextField();
-        campoCuenta.setPromptText("Ej: 12345");
-        campoCuenta.setText("12345");
+        campoCuenta.setPromptText("Ej: 10000001");
+        campoCuenta.setText("10000001");
 
         Label lblMonto = new Label("Monto:");
         TextField campoMonto = new TextField();
@@ -194,11 +278,20 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
             }
         });
 
+        btnVoucher = new Button("GENERAR VOUCHER");
+        btnVoucher.setPrefWidth(260);
+        btnVoucher.setStyle("-fx-font-size: 11; -fx-padding: 8; -fx-background-color: #FF9800; -fx-text-fill: white;");
+        btnVoucher.setDisable(true);
+        btnVoucher.setOnAction(e -> generarYGuardarVoucher());
+
         HBox botones1 = new HBox(5);
         botones1.getChildren().addAll(btnDeposito, btnRetiro);
 
         HBox botones2 = new HBox(5);
         botones2.getChildren().addAll(btnConsulta);
+        
+        HBox botones3 = new HBox(5);
+        botones3.getChildren().addAll(btnVoucher);
 
         // Información de cuentas disponibles
         Label lblInfo = new Label("Cuentas de Prueba:");
@@ -207,16 +300,18 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
         TextArea areaCuentas = new TextArea();
         areaCuentas.setEditable(false);
         areaCuentas.setWrapText(true);
-        areaCuentas.setPrefHeight(120);
+        areaCuentas.setPrefHeight(100);
         areaCuentas.setStyle("-fx-font-size: 10; -fx-control-inner-background: #f9f9f9;");
-        areaCuentas.setText("Cuenta: 12345\nTitular: Juan Pérez\nSaldo: $5,000.00\n\nCuenta: 54321\nTitular: María García\nSaldo: $3,500.00\n\nCuenta: 99999\nTitular: Carlos López\nSaldo: $10,000.00");
+        areaCuentas.setText("Cuenta: 10000001\nTitular: Juan Pérez\nSaldo: $5,000.00\n\nCuenta: 10000002\nTitular: María García\nSaldo: $3,500.00\n\nCuenta: 10000003\nTitular: Carlos López\nSaldo: $10,000.00");
 
         panel.getChildren().addAll(
             titulo,
+            lblMiCuenta, campoMiCuenta,
+            new Separator(),
             lblCuenta, campoCuenta,
             lblMonto, campoMonto,
             new Separator(),
-            botones1, botones2,
+            botones1, botones2, botones3,
             new Separator(),
             lblInfo, areaCuentas
         );
@@ -265,11 +360,36 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
             btnEnviar.setDisable(false);
             
             // Habilitar botones de transacciones
-            areaChat.appendText("[INFO] Conectado como: " + nombre + "\n");
-            areaChat.appendText("[INFO] Sistema de transacciones bancarias activo\n");
+            agregarMensajeBurbuja("INFO", "Conectado como: " + nombre, false);
+            agregarMensajeBurbuja("INFO", "Sistema de transacciones bancarias activo", false);
         } else {
             mostrarAlerta("Error", "No se pudo conectar al servidor");
         }
+    }
+
+    public void conectarAutomatico() {
+        Platform.runLater(() -> {
+            try {
+                Thread.sleep(500);
+                String nombre = campoNombre.getText().trim();
+                if (!nombre.isEmpty()) {
+                    cliente = new Cliente(nombre, this);
+                    if (cliente.conectar()) {
+                        campoNombre.setDisable(true);
+                        btnConectar.setDisable(true);
+                        btnDesconectar.setDisable(false);
+                        campoMensaje.setDisable(false);
+                        btnEnviar.setDisable(false);
+                        
+                        agregarMensajeBurbuja("INFO", "Conectado automáticamente como: " + nombre, false);
+                        agregarMensajeBurbuja("INFO", "Sistema de transacciones bancarias activo", false);
+                        System.out.println("[SUCCESS] Cliente conectado automáticamente");
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("[ERROR] Error en conexión automática: " + e.getMessage());
+            }
+        });
     }
 
     private void desconectarDelServidor() {
@@ -282,7 +402,7 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
         String mensaje = campoMensaje.getText().trim();
         if (!mensaje.isEmpty() && cliente != null) {
             cliente.enviarMensaje(mensaje);
-            areaChat.appendText("[Yo]: " + mensaje + "\n");
+            agregarMensajeBurbuja("Yo", mensaje, true);
             campoMensaje.clear();
             campoMensaje.requestFocus();
         }
@@ -299,7 +419,16 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
     @Override
     public void onMensajeRecibido(String mensaje) {
         Platform.runLater(() -> {
-            areaChat.appendText(mensaje + "\n");
+            // Parsear mensaje con formato "[Usuario]: Contenido"
+            if (mensaje.contains("]:")) {
+                int endUser = mensaje.indexOf("]:");
+                String usuario = mensaje.substring(1, endUser);
+                String contenido = mensaje.substring(endUser + 2).trim();
+                agregarMensajeBurbuja(usuario, contenido, false);
+            } else {
+                // Si no tiene formato estándar, mostrar como mensaje del sistema
+                agregarMensajeBurbuja("SISTEMA", mensaje, false);
+            }
         });
     }
 
@@ -307,7 +436,7 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
     public void onTramaRecibida(Frame frame) {
         Platform.runLater(() -> {
             String respuesta = formatearTramaParaMostrar(frame);
-            areaChat.appendText(respuesta + "\n");
+            agregarMensajeBurbuja("SERVIDOR", respuesta, false);
         });
     }
 
@@ -323,14 +452,15 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
                 btnDeposito.setDisable(false);
                 btnRetiro.setDisable(false);
                 btnConsulta.setDisable(false);
+                btnVoucher.setDisable(false);
                 
                 campoNombre.setDisable(true);
                 btnConectar.setDisable(true);
                 btnDesconectar.setDisable(false);
                 campoMensaje.setDisable(false);
                 btnEnviar.setDisable(false);
-                areaChat.appendText("[INFO] Conectado como: " + campoNombre.getText() + "\n");
-                areaChat.appendText("[INFO] Sistema de transacciones bancarias activo\n");
+                agregarMensajeBurbuja("INFO", "Conectado como: " + campoNombre.getText(), false);
+                agregarMensajeBurbuja("INFO", "Sistema de transacciones bancarias activo", false);
             } else {
                 estadoLabel.setText("Estado: Desconectado");
                 estadoLabel.setStyle("-fx-font-size: 12; -fx-text-fill: red;");
@@ -339,6 +469,7 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
                 btnDeposito.setDisable(true);
                 btnRetiro.setDisable(true);
                 btnConsulta.setDisable(true);
+                btnVoucher.setDisable(true);
                 
                 campoNombre.setDisable(false);
                 btnConectar.setDisable(false);
@@ -402,6 +533,52 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
         }
 
         return sb.toString();
+    }
+
+    private void generarYGuardarVoucher() {
+        if (ultimoNumeroTransaccion.isEmpty()) {
+            mostrarAlerta("Error", "No hay transacción reciente para generar voucher");
+            return;
+        }
+        
+        try {
+            String nombreArchivo = VoucherGenerator.generarNombreArchivo(ultimoNumeroTransaccion);
+            
+            VoucherGenerator generador = new VoucherGenerator(
+                ultimoNumeroTransaccion,
+                ultimoTipoOperacion,
+                campoNombre.getText(),
+                "12345",
+                ultimoMonto,
+                ultimoSaldoAnterior,
+                ultimoSaldoNuevo
+            );
+            
+            // Crear carpeta Vouchers si no existe
+            File carpetaVouchers = new File(System.getProperty("user.home"), "Descargas/Vouchers");
+            if (!carpetaVouchers.exists()) {
+                carpetaVouchers.mkdirs();
+            }
+            
+            File archivo = new File(carpetaVouchers, nombreArchivo);
+            
+            if (generador.guardarEnArchivo(archivo)) {
+                mostrarAlerta("Éxito", "Voucher generado en:\n" + archivo.getAbsolutePath());
+            } else {
+                mostrarAlerta("Error", "No se pudo generar el voucher");
+            }
+        } catch (Exception e) {
+            mostrarAlerta("Error", "Error al generar voucher: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void mostrarAlerta(String titulo, String contenido) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(titulo);
+        alert.setHeaderText(null);
+        alert.setContentText(contenido);
+        alert.showAndWait();
     }
 
     public static void main(String[] args) {

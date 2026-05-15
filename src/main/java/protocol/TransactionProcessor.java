@@ -23,9 +23,9 @@ public class TransactionProcessor {
      * Inicializa cuentas de prueba
      */
     private void inicializarCuentasPrueba() {
-        cuentas.put(12345L, new BankAccount(12345L, "Juan Pérez", 5000.0));
-        cuentas.put(54321L, new BankAccount(54321L, "María García", 3500.0));
-        cuentas.put(99999L, new BankAccount(99999L, "Carlos López", 10000.0));
+        cuentas.put(10000001L, new BankAccount(10000001L, "Juan Pérez", 5000.0));
+        cuentas.put(10000002L, new BankAccount(10000002L, "María García", 3500.0));
+        cuentas.put(10000003L, new BankAccount(10000003L, "Carlos López", 10000.0));
     }
 
     /**

@@ -32,7 +32,7 @@ public class ServidorGUI extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setTitle("ChatFX - Servidor de Transacciones Bancarias");
+        primaryStage.setTitle("MercadoCentro - Servidor de Transacciones Bancarias");
         primaryStage.setWidth(900);
         primaryStage.setHeight(650);
 
