@@ -189,7 +189,7 @@ public class ServidorGUI extends Application {
 
         new Thread(() -> {
             try {
-                serverSocket = new ServerSocket(puertoServidor);
+                serverSocket = new ServerSocket(puertoServidor, 50, InetAddress.getByName("0.0.0.0"));
                 activo = true;
 
                 Platform.runLater(() -> {

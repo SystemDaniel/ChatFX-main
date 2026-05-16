@@ -19,9 +19,11 @@ public class Servidor {
 
     public static void iniciarServidor() {
         try {
-            serverSocket = new ServerSocket(PUERTO);
+            serverSocket = new ServerSocket(PUERTO, 50, InetAddress.getByName("0.0.0.0"));
             System.out.println("=== SERVIDOR DE TRANSACCIONES INICIADO ===");
             System.out.println("Escuchando en puerto: " + PUERTO);
+            System.out.println("IP: 0.0.0.0 (Todas las interfaces de red)");
+            System.out.println("Los clientes remotos pueden conectarse usando la IP local de este equipo");
             System.out.println("Procesador de transacciones activo");
             System.out.println("Esperando conexiones...\n");
 
