@@ -219,13 +219,24 @@ public class LoginGUI extends Application {
 
     private void abrirChat(String usuario) {
         try {
-            abrirServidorAutomatico();
-            Thread.sleep(1000);
-            abrirClienteConexion(usuario);
+            System.out.println("[INFO] Sesión iniciada para: " + usuario);
+            // Abre el menú principal
+            abrirMenuPrincipal(usuario);
             miStage.close();
         } catch (Exception e) {
-            System.err.println("[ERROR] Error abriendo chat: " + e.getMessage());
+            System.err.println("[ERROR] Error abriendo menú: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    private void abrirMenuPrincipal(String usuario) {
+        try {
+            App menuPrincipal = new App(usuario);
+            Stage ventanaMenu = new Stage();
+            menuPrincipal.start(ventanaMenu);
+            System.out.println("[INFO] Menú principal abierto");
+        } catch (Exception e) {
+            System.err.println("[ERROR] No se pudo abrir menú principal: " + e.getMessage());
         }
     }
 
