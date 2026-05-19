@@ -4,20 +4,45 @@ import java.sql.*;
 import java.nio.file.Paths;
 
 public class DatabaseInit {
-    private static final String DB_URL = "jdbc:sqlite:" + Paths.get(System.getProperty("user.dir"), "chatfx.db").toString();
+    private static final String DB_URL;
+
+    static {
+        String dbPath;
+        try {
+            // Busca el .db junto al ejecutable/JAR
+            java.net.URL location = DatabaseInit.class.getProtectionDomain()
+                    .getCodeSource().getLocation();
+            java.nio.file.Path jarPath = java.nio.file.Paths.get(location.toURI()).getParent();
+            dbPath = "jdbc:sqlite:" + jarPath.resolve("chatfx.db").toString();
+        } catch (Exception e) {
+            // Fallback al directorio actual
+            dbPath = "jdbc:sqlite:" + java.nio.file.Paths.get(
+                    System.getProperty("user.dir"), "chatfx.db").toString();
+        }
+        DB_URL = dbPath;
+    }
+    
     private static Connection conexion;
 
     public static void inicializarBD() {
         try {
+            System.out.println("[DB] Intentando conectar a: " + DB_URL);
             Class.forName("org.sqlite.JDBC");
             conexion = DriverManager.getConnection(DB_URL);
+            System.out.println("[DB] ✓ Conexión exitosa");
             crearTablas();
             inicializarCuentasPrueba();
             System.out.println("[DB] Base de datos inicializada correctamente");
         } catch (ClassNotFoundException e) {
             System.err.println("[ERROR] Driver SQLite no encontrado: " + e.getMessage());
+            e.printStackTrace();
         } catch (SQLException e) {
-            System.err.println("[ERROR] No se pudo conectar a la BD: " + e.getMessage());
+            System.err.println("[ERROR] No se pudo conectar a la BD en: " + DB_URL);
+            System.err.println("[ERROR] Detalles: " + e.getMessage());
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.err.println("[ERROR] Error inesperado en BD: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -96,10 +121,22 @@ public class DatabaseInit {
     }
 
     public static Connection getConexion() {
-        if (conexion == null) {
-            inicializarBD();
+        try {
+            if (conexion == null) {
+                System.out.println("[DB] Conexión nula, reinicializando...");
+                inicializarBD();
+            } else if (conexion.isClosed()) {
+                System.out.println("[DB] Conexión cerrada, reabriendo...");
+                inicializarBD();
+            }
+            if (conexion == null) {
+                System.err.println("[ERROR] No se pudo establecer conexión a la BD");
+            }
+            return conexion;
+        } catch (SQLException e) {
+            System.err.println("[ERROR] Error al verificar conexión: " + e.getMessage());
+            return conexion;
         }
-        return conexion;
     }
 
     public static void cerrar() {

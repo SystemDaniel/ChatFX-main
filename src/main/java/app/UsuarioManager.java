@@ -5,6 +5,7 @@ import java.sql.*;
 
 public class UsuarioManager {
     private static UsuarioManager instancia;
+    private String ultimoError = "";
 
     private UsuarioManager() {
         DatabaseInit.inicializarBD();
@@ -29,16 +30,19 @@ public class UsuarioManager {
                 String contraseñaIngresada = hashear(contraseña);
                 return contraseñaHasheada.equals(contraseñaIngresada);
             }
+            ultimoError = "Usuario no encontrado";
             return false;
         } catch (SQLException e) {
-            System.err.println("[ERROR] Error en login: " + e.getMessage());
+            ultimoError = "Error en login: " + e.getMessage();
+            System.err.println("[ERROR] " + ultimoError);
             return false;
         }
     }
 
     public boolean registrar(String usuario, String contraseña, String email) {
         if (usuario.isEmpty() || contraseña.isEmpty()) {
-            System.out.println("[REGISTRO] Usuario y contraseña no pueden estar vacíos");
+            ultimoError = "Usuario y contraseña no pueden estar vacíos";
+            System.out.println("[REGISTRO] " + ultimoError);
             return false;
         }
 
@@ -49,14 +53,21 @@ public class UsuarioManager {
             pstmt.setString(2, hashear(contraseña));
             pstmt.setString(3, email);
             pstmt.executeUpdate();
+            ultimoError = "";
             System.out.println("[REGISTRO] Usuario registrado: " + usuario);
             return true;
         } catch (SQLException e) {
             if (e.getMessage().contains("UNIQUE constraint failed")) {
-                System.out.println("[REGISTRO] El usuario ya existe");
+                ultimoError = "El usuario ya existe";
+                System.out.println("[REGISTRO] " + ultimoError);
             } else {
-                System.err.println("[ERROR] Error en registro: " + e.getMessage());
+                ultimoError = "Error en BD: " + e.getMessage();
+                System.err.println("[ERROR] " + ultimoError);
             }
+            return false;
+        } catch (Exception e) {
+            ultimoError = "Error inesperado: " + e.getMessage();
+            System.err.println("[ERROR] " + ultimoError);
             return false;
         }
     }
@@ -87,5 +98,9 @@ public class UsuarioManager {
             System.err.println("[ERROR] Error hasheando contraseña: " + e.getMessage());
             return "";
         }
+    }
+
+    public String getUltimoError() {
+        return ultimoError;
     }
 }

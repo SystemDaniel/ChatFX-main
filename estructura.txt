@@ -1,0 +1,824 @@
+Folder PATH listing
+Volume serial number is 30A6-BF94
+C:\USERS\ODCHALIC\MUSIC\CHATFX-MAIN
+¦   .gitignore
+¦   app.jar
+¦   chatfx.db
+¦   estructura.txt
+¦   INSTRUCCIONES.md
+¦   MANIFEST.MF
+¦   PROTOCOLO_Y_VOUCHERS.md
+¦   README.md
+¦   
++---.vscode
+¦       launch.json
+¦       settings.json
+¦       
++---input-pkg
+¦   ¦   app.jar
+¦   ¦   
+¦   +---lib
+¦       ¦   javafx.properties
+¦       ¦   slf4j-simple-2.0.17.jar
+¦       ¦   slf4j.api_2.0.17.jar
+¦       ¦   sqlite-jdbc-3.44.0.0.jar
+¦       ¦   
+¦       +---sqlite-jdbc-3.44.0.0
+¦           ¦   sqlite-jdbc.properties
+¦           ¦   
+¦           +---META-INF
+¦           ¦   ¦   MANIFEST.MF
+¦           ¦   ¦   
+¦           ¦   +---maven
+¦           ¦   ¦   +---org.xerial
+¦           ¦   ¦       +---sqlite-jdbc
+¦           ¦   ¦               LICENSE
+¦           ¦   ¦               LICENSE.zentus
+¦           ¦   ¦               pom.properties
+¦           ¦   ¦               pom.xml
+¦           ¦   ¦               VERSION
+¦           ¦   ¦               
+¦           ¦   +---native-image
+¦           ¦   ¦   +---org.xerial
+¦           ¦   ¦       +---sqlite-jdbc
+¦           ¦   ¦               native-image.properties
+¦           ¦   ¦               
+¦           ¦   +---services
+¦           ¦           java.sql.Driver
+¦           ¦           
+¦           +---org
+¦               +---sqlite
+¦                   +---native
+¦                       +---FreeBSD
+¦                       ¦   +---aarch64
+¦                       ¦   ¦       libsqlitejdbc.so
+¦                       ¦   ¦       
+¦                       ¦   +---x86
+¦                       ¦   ¦       libsqlitejdbc.so
+¦                       ¦   ¦       
+¦                       ¦   +---x86_64
+¦                       ¦           libsqlitejdbc.so
+¦                       ¦           
+¦                       +---Linux
+¦                       ¦   +---aarch64
+¦                       ¦   ¦       libsqlitejdbc.so
+¦                       ¦   ¦       
+¦                       ¦   +---arm
+¦                       ¦   ¦       libsqlitejdbc.so
+¦                       ¦   ¦       
+¦                       ¦   +---armv6
+¦                       ¦   ¦       libsqlitejdbc.so
+¦                       ¦   ¦       
+¦                       ¦   +---armv7
+¦                       ¦   ¦       libsqlitejdbc.so
+¦                       ¦   ¦       
+¦                       ¦   +---ppc64
+¦                       ¦   ¦       libsqlitejdbc.so
+¦                       ¦   ¦       
+¦                       ¦   +---x86
+¦                       ¦   ¦       libsqlitejdbc.so
+¦                       ¦   ¦       
+¦                       ¦   +---x86_64
+¦                       ¦           libsqlitejdbc.so
+¦                       ¦           
+¦                       +---Linux-Android
+¦                       ¦   +---aarch64
+¦                       ¦   ¦       libsqlitejdbc.so
+¦                       ¦   ¦       
+¦                       ¦   +---arm
+¦                       ¦   ¦       libsqlitejdbc.so
+¦                       ¦   ¦       
+¦                       ¦   +---x86
+¦                       ¦   ¦       libsqlitejdbc.so
+¦                       ¦   ¦       
+¦                       ¦   +---x86_64
+¦                       ¦           libsqlitejdbc.so
+¦                       ¦           
+¦                       +---Linux-Musl
+¦                       ¦   +---aarch64
+¦                       ¦   ¦       libsqlitejdbc.so
+¦                       ¦   ¦       
+¦                       ¦   +---x86
+¦                       ¦   ¦       libsqlitejdbc.so
+¦                       ¦   ¦       
+¦                       ¦   +---x86_64
+¦                       ¦           libsqlitejdbc.so
+¦                       ¦           
+¦                       +---Mac
+¦                       ¦   +---aarch64
+¦                       ¦   ¦       libsqlitejdbc.dylib
+¦                       ¦   ¦       
+¦                       ¦   +---x86_64
+¦                       ¦           libsqlitejdbc.dylib
+¦                       ¦           
+¦                       +---Windows
+¦                           +---aarch64
+¦                           ¦       sqlitejdbc.dll
+¦                           ¦       
+¦                           +---armv7
+¦                           ¦       sqlitejdbc.dll
+¦                           ¦       
+¦                           +---x86
+¦                           ¦       sqlitejdbc.dll
+¦                           ¦       
+¦                           +---x86_64
+¦                                   sqlitejdbc.dll
+¦                                   
++---lib
+¦   ¦   javafx.properties
+¦   ¦   slf4j-simple-2.0.17.jar
+¦   ¦   slf4j.api_2.0.17.jar
+¦   ¦   sqlite-jdbc-3.44.0.0.jar
+¦   ¦   
+¦   +---sqlite-jdbc-3.44.0.0
+¦       ¦   sqlite-jdbc.properties
+¦       ¦   
+¦       +---META-INF
+¦       ¦   ¦   MANIFEST.MF
+¦       ¦   ¦   
+¦       ¦   +---maven
+¦       ¦   ¦   +---org.xerial
+¦       ¦   ¦       +---sqlite-jdbc
+¦       ¦   ¦               LICENSE
+¦       ¦   ¦               LICENSE.zentus
+¦       ¦   ¦               pom.properties
+¦       ¦   ¦               pom.xml
+¦       ¦   ¦               VERSION
+¦       ¦   ¦               
+¦       ¦   +---native-image
+¦       ¦   ¦   +---org.xerial
+¦       ¦   ¦       +---sqlite-jdbc
+¦       ¦   ¦               native-image.properties
+¦       ¦   ¦               
+¦       ¦   +---services
+¦       ¦           java.sql.Driver
+¦       ¦           
+¦       +---org
+¦           +---sqlite
+¦               +---native
+¦                   +---FreeBSD
+¦                   ¦   +---aarch64
+¦                   ¦   ¦       libsqlitejdbc.so
+¦                   ¦   ¦       
+¦                   ¦   +---x86
+¦                   ¦   ¦       libsqlitejdbc.so
+¦                   ¦   ¦       
+¦                   ¦   +---x86_64
+¦                   ¦           libsqlitejdbc.so
+¦                   ¦           
+¦                   +---Linux
+¦                   ¦   +---aarch64
+¦                   ¦   ¦       libsqlitejdbc.so
+¦                   ¦   ¦       
+¦                   ¦   +---arm
+¦                   ¦   ¦       libsqlitejdbc.so
+¦                   ¦   ¦       
+¦                   ¦   +---armv6
+¦                   ¦   ¦       libsqlitejdbc.so
+¦                   ¦   ¦       
+¦                   ¦   +---armv7
+¦                   ¦   ¦       libsqlitejdbc.so
+¦                   ¦   ¦       
+¦                   ¦   +---ppc64
+¦                   ¦   ¦       libsqlitejdbc.so
+¦                   ¦   ¦       
+¦                   ¦   +---x86
+¦                   ¦   ¦       libsqlitejdbc.so
+¦                   ¦   ¦       
+¦                   ¦   +---x86_64
+¦                   ¦           libsqlitejdbc.so
+¦                   ¦           
+¦                   +---Linux-Android
+¦                   ¦   +---aarch64
+¦                   ¦   ¦       libsqlitejdbc.so
+¦                   ¦   ¦       
+¦                   ¦   +---arm
+¦                   ¦   ¦       libsqlitejdbc.so
+¦                   ¦   ¦       
+¦                   ¦   +---x86
+¦                   ¦   ¦       libsqlitejdbc.so
+¦                   ¦   ¦       
+¦                   ¦   +---x86_64
+¦                   ¦           libsqlitejdbc.so
+¦                   ¦           
+¦                   +---Linux-Musl
+¦                   ¦   +---aarch64
+¦                   ¦   ¦       libsqlitejdbc.so
+¦                   ¦   ¦       
+¦                   ¦   +---x86
+¦                   ¦   ¦       libsqlitejdbc.so
+¦                   ¦   ¦       
+¦                   ¦   +---x86_64
+¦                   ¦           libsqlitejdbc.so
+¦                   ¦           
+¦                   +---Mac
+¦                   ¦   +---aarch64
+¦                   ¦   ¦       libsqlitejdbc.dylib
+¦                   ¦   ¦       
+¦                   ¦   +---x86_64
+¦                   ¦           libsqlitejdbc.dylib
+¦                   ¦           
+¦                   +---Windows
+¦                       +---aarch64
+¦                       ¦       sqlitejdbc.dll
+¦                       ¦       
+¦                       +---armv7
+¦                       ¦       sqlitejdbc.dll
+¦                       ¦       
+¦                       +---x86
+¦                       ¦       sqlitejdbc.dll
+¦                       ¦       
+¦                       +---x86_64
+¦                               sqlitejdbc.dll
+¦                               
++---META-INF
+¦       MANIFEST.MF
+¦       
++---out
+¦   +---app
+¦   ¦       AccountNumberGenerator.class
+¦   ¦       App.class
+¦   ¦       DatabaseInit.class
+¦   ¦       LoginGUI.class
+¦   ¦       UsuarioManager.class
+¦   ¦       VoucherGenerator.class
+¦   ¦       
+¦   +---client
+¦   ¦       Cliente$ClienteListener.class
+¦   ¦       Cliente.class
+¦   ¦       ClienteGUI.class
+¦   ¦       
+¦   +---protocol
+¦   ¦       Frame.class
+¦   ¦       FrameParser.class
+¦   ¦       ProtocolConstants.class
+¦   ¦       TransactionProcessor$BankAccount.class
+¦   ¦       TransactionProcessor$Transaction.class
+¦   ¦       TransactionProcessor.class
+¦   ¦       
+¦   +---server
+¦           ClientHandler.class
+¦           ClientHandlerGUI.class
+¦           Servidor.class
+¦           ServidorGUI.class
+¦           
++---output-pkg
+¦   +---ChatFX
+¦       ¦   ChatFX.exe
+¦       ¦   
+¦       +---app
+¦       ¦   ¦   .jpackage.xml
+¦       ¦   ¦   app.jar
+¦       ¦   ¦   ChatFX.cfg
+¦       ¦   ¦   javafx-swt.jar
+¦       ¦   ¦   javafx.base.jar
+¦       ¦   ¦   javafx.controls.jar
+¦       ¦   ¦   javafx.fxml.jar
+¦       ¦   ¦   javafx.graphics.jar
+¦       ¦   ¦   javafx.media.jar
+¦       ¦   ¦   javafx.swing.jar
+¦       ¦   ¦   javafx.web.jar
+¦       ¦   ¦   
+¦       ¦   +---lib
+¦       ¦       ¦   javafx.properties
+¦       ¦       ¦   slf4j-simple-2.0.17.jar
+¦       ¦       ¦   slf4j.api_2.0.17.jar
+¦       ¦       ¦   sqlite-jdbc-3.44.0.0.jar
+¦       ¦       ¦   
+¦       ¦       +---sqlite-jdbc-3.44.0.0
+¦       ¦           ¦   sqlite-jdbc.properties
+¦       ¦           ¦   
+¦       ¦           +---META-INF
+¦       ¦           ¦   ¦   MANIFEST.MF
+¦       ¦           ¦   ¦   
+¦       ¦           ¦   +---maven
+¦       ¦           ¦   ¦   +---org.xerial
+¦       ¦           ¦   ¦       +---sqlite-jdbc
+¦       ¦           ¦   ¦               LICENSE
+¦       ¦           ¦   ¦               LICENSE.zentus
+¦       ¦           ¦   ¦               pom.properties
+¦       ¦           ¦   ¦               pom.xml
+¦       ¦           ¦   ¦               VERSION
+¦       ¦           ¦   ¦               
+¦       ¦           ¦   +---native-image
+¦       ¦           ¦   ¦   +---org.xerial
+¦       ¦           ¦   ¦       +---sqlite-jdbc
+¦       ¦           ¦   ¦               native-image.properties
+¦       ¦           ¦   ¦               
+¦       ¦           ¦   +---services
+¦       ¦           ¦           java.sql.Driver
+¦       ¦           ¦           
+¦       ¦           +---org
+¦       ¦               +---sqlite
+¦       ¦                   +---native
+¦       ¦                       +---FreeBSD
+¦       ¦                       ¦   +---aarch64
+¦       ¦                       ¦   ¦       libsqlitejdbc.so
+¦       ¦                       ¦   ¦       
+¦       ¦                       ¦   +---x86
+¦       ¦                       ¦   ¦       libsqlitejdbc.so
+¦       ¦                       ¦   ¦       
+¦       ¦                       ¦   +---x86_64
+¦       ¦                       ¦           libsqlitejdbc.so
+¦       ¦                       ¦           
+¦       ¦                       +---Linux
+¦       ¦                       ¦   +---aarch64
+¦       ¦                       ¦   ¦       libsqlitejdbc.so
+¦       ¦                       ¦   ¦       
+¦       ¦                       ¦   +---arm
+¦       ¦                       ¦   ¦       libsqlitejdbc.so
+¦       ¦                       ¦   ¦       
+¦       ¦                       ¦   +---armv6
+¦       ¦                       ¦   ¦       libsqlitejdbc.so
+¦       ¦                       ¦   ¦       
+¦       ¦                       ¦   +---armv7
+¦       ¦                       ¦   ¦       libsqlitejdbc.so
+¦       ¦                       ¦   ¦       
+¦       ¦                       ¦   +---ppc64
+¦       ¦                       ¦   ¦       libsqlitejdbc.so
+¦       ¦                       ¦   ¦       
+¦       ¦                       ¦   +---x86
+¦       ¦                       ¦   ¦       libsqlitejdbc.so
+¦       ¦                       ¦   ¦       
+¦       ¦                       ¦   +---x86_64
+¦       ¦                       ¦           libsqlitejdbc.so
+¦       ¦                       ¦           
+¦       ¦                       +---Linux-Android
+¦       ¦                       ¦   +---aarch64
+¦       ¦                       ¦   ¦       libsqlitejdbc.so
+¦       ¦                       ¦   ¦       
+¦       ¦                       ¦   +---arm
+¦       ¦                       ¦   ¦       libsqlitejdbc.so
+¦       ¦                       ¦   ¦       
+¦       ¦                       ¦   +---x86
+¦       ¦                       ¦   ¦       libsqlitejdbc.so
+¦       ¦                       ¦   ¦       
+¦       ¦                       ¦   +---x86_64
+¦       ¦                       ¦           libsqlitejdbc.so
+¦       ¦                       ¦           
+¦       ¦                       +---Linux-Musl
+¦       ¦                       ¦   +---aarch64
+¦       ¦                       ¦   ¦       libsqlitejdbc.so
+¦       ¦                       ¦   ¦       
+¦       ¦                       ¦   +---x86
+¦       ¦                       ¦   ¦       libsqlitejdbc.so
+¦       ¦                       ¦   ¦       
+¦       ¦                       ¦   +---x86_64
+¦       ¦                       ¦           libsqlitejdbc.so
+¦       ¦                       ¦           
+¦       ¦                       +---Mac
+¦       ¦                       ¦   +---aarch64
+¦       ¦                       ¦   ¦       libsqlitejdbc.dylib
+¦       ¦                       ¦   ¦       
+¦       ¦                       ¦   +---x86_64
+¦       ¦                       ¦           libsqlitejdbc.dylib
+¦       ¦                       ¦           
+¦       ¦                       +---Windows
+¦       ¦                           +---aarch64
+¦       ¦                           ¦       sqlitejdbc.dll
+¦       ¦                           ¦       
+¦       ¦                           +---armv7
+¦       ¦                           ¦       sqlitejdbc.dll
+¦       ¦                           ¦       
+¦       ¦                           +---x86
+¦       ¦                           ¦       sqlitejdbc.dll
+¦       ¦                           ¦       
+¦       ¦                           +---x86_64
+¦       ¦                                   sqlitejdbc.dll
+¦       ¦                                   
+¦       +---runtime
+¦           ¦   release
+¦           ¦   
+¦           +---bin
+¦           ¦   ¦   api-ms-win-core-console-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-core-console-l1-2-0.dll
+¦           ¦   ¦   api-ms-win-core-datetime-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-core-debug-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-core-errorhandling-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-core-fibers-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-core-fibers-l1-1-1.dll
+¦           ¦   ¦   api-ms-win-core-file-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-core-file-l1-2-0.dll
+¦           ¦   ¦   api-ms-win-core-file-l2-1-0.dll
+¦           ¦   ¦   api-ms-win-core-handle-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-core-heap-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-core-interlocked-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-core-kernel32-legacy-l1-1-1.dll
+¦           ¦   ¦   api-ms-win-core-libraryloader-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-core-localization-l1-2-0.dll
+¦           ¦   ¦   api-ms-win-core-memory-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-core-namedpipe-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-core-processenvironment-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-core-processthreads-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-core-processthreads-l1-1-1.dll
+¦           ¦   ¦   api-ms-win-core-profile-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-core-rtlsupport-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-core-string-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-core-synch-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-core-synch-l1-2-0.dll
+¦           ¦   ¦   api-ms-win-core-sysinfo-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-core-sysinfo-l1-2-0.dll
+¦           ¦   ¦   api-ms-win-core-timezone-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-core-util-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-crt-conio-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-crt-convert-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-crt-environment-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-crt-filesystem-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-crt-heap-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-crt-locale-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-crt-math-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-crt-multibyte-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-crt-private-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-crt-process-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-crt-runtime-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-crt-stdio-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-crt-string-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-crt-time-l1-1-0.dll
+¦           ¦   ¦   api-ms-win-crt-utility-l1-1-0.dll
+¦           ¦   ¦   awt.dll
+¦           ¦   ¦   decora_sse.dll
+¦           ¦   ¦   fontmanager.dll
+¦           ¦   ¦   freetype.dll
+¦           ¦   ¦   fxplugins.dll
+¦           ¦   ¦   glass.dll
+¦           ¦   ¦   glib-lite.dll
+¦           ¦   ¦   gstreamer-lite.dll
+¦           ¦   ¦   java.dll
+¦           ¦   ¦   java.exe
+¦           ¦   ¦   javafx_font.dll
+¦           ¦   ¦   javafx_iio.dll
+¦           ¦   ¦   javajpeg.dll
+¦           ¦   ¦   javaw.exe
+¦           ¦   ¦   jawt.dll
+¦           ¦   ¦   jfxmedia.dll
+¦           ¦   ¦   jfxwebkit.dll
+¦           ¦   ¦   jimage.dll
+¦           ¦   ¦   jli.dll
+¦           ¦   ¦   jrunscript.exe
+¦           ¦   ¦   jsound.dll
+¦           ¦   ¦   keytool.exe
+¦           ¦   ¦   lcms.dll
+¦           ¦   ¦   mlib_image.dll
+¦           ¦   ¦   msvcp140.dll
+¦           ¦   ¦   msvcp140_1.dll
+¦           ¦   ¦   msvcp140_2.dll
+¦           ¦   ¦   net.dll
+¦           ¦   ¦   nio.dll
+¦           ¦   ¦   prefs.dll
+¦           ¦   ¦   prism_common.dll
+¦           ¦   ¦   prism_d3d.dll
+¦           ¦   ¦   prism_sw.dll
+¦           ¦   ¦   splashscreen.dll
+¦           ¦   ¦   syslookup.dll
+¦           ¦   ¦   ucrtbase.dll
+¦           ¦   ¦   vcruntime140.dll
+¦           ¦   ¦   vcruntime140_1.dll
+¦           ¦   ¦   verify.dll
+¦           ¦   ¦   zip.dll
+¦           ¦   ¦   
+¦           ¦   +---server
+¦           ¦           jvm.dll
+¦           ¦           
+¦           +---conf
+¦           ¦   ¦   jaxp.properties
+¦           ¦   ¦   logging.properties
+¦           ¦   ¦   net.properties
+¦           ¦   ¦   sound.properties
+¦           ¦   ¦   
+¦           ¦   +---security
+¦           ¦       ¦   java.policy
+¦           ¦       ¦   java.security
+¦           ¦       ¦   
+¦           ¦       +---policy
+¦           ¦           ¦   README.txt
+¦           ¦           ¦   
+¦           ¦           +---limited
+¦           ¦           ¦       default_local.policy
+¦           ¦           ¦       default_US_export.policy
+¦           ¦           ¦       exempt_local.policy
+¦           ¦           ¦       
+¦           ¦           +---unlimited
+¦           ¦                   default_local.policy
+¦           ¦                   default_US_export.policy
+¦           ¦                   
+¦           +---legal
+¦           ¦   +---java.base
+¦           ¦   ¦       aes.md
+¦           ¦   ¦       asm.md
+¦           ¦   ¦       c-libutl.md
+¦           ¦   ¦       cldr.md
+¦           ¦   ¦       COPYRIGHT
+¦           ¦   ¦       icu.md
+¦           ¦   ¦       LICENSE
+¦           ¦   ¦       public_suffix.md
+¦           ¦   ¦       siphash.md
+¦           ¦   ¦       unicode.md
+¦           ¦   ¦       wepoll.md
+¦           ¦   ¦       zlib.md
+¦           ¦   ¦       
+¦           ¦   +---java.datatransfer
+¦           ¦   ¦       COPYRIGHT
+¦           ¦   ¦       LICENSE
+¦           ¦   ¦       
+¦           ¦   +---java.desktop
+¦           ¦   ¦       colorimaging.md
+¦           ¦   ¦       COPYRIGHT
+¦           ¦   ¦       freetype.md
+¦           ¦   ¦       giflib.md
+¦           ¦   ¦       harfbuzz.md
+¦           ¦   ¦       jpeg.md
+¦           ¦   ¦       lcms.md
+¦           ¦   ¦       libpng.md
+¦           ¦   ¦       LICENSE
+¦           ¦   ¦       mesa3d.md
+¦           ¦   ¦       
+¦           ¦   +---java.logging
+¦           ¦   ¦       COPYRIGHT
+¦           ¦   ¦       LICENSE
+¦           ¦   ¦       
+¦           ¦   +---java.naming
+¦           ¦   ¦       COPYRIGHT
+¦           ¦   ¦       LICENSE
+¦           ¦   ¦       
+¦           ¦   +---java.net.http
+¦           ¦   ¦       COPYRIGHT
+¦           ¦   ¦       LICENSE
+¦           ¦   ¦       
+¦           ¦   +---java.prefs
+¦           ¦   ¦       COPYRIGHT
+¦           ¦   ¦       LICENSE
+¦           ¦   ¦       
+¦           ¦   +---java.scripting
+¦           ¦   ¦       COPYRIGHT
+¦           ¦   ¦       LICENSE
+¦           ¦   ¦       
+¦           ¦   +---java.security.sasl
+¦           ¦   ¦       COPYRIGHT
+¦           ¦   ¦       LICENSE
+¦           ¦   ¦       
+¦           ¦   +---java.sql
+¦           ¦   ¦       COPYRIGHT
+¦           ¦   ¦       LICENSE
+¦           ¦   ¦       
+¦           ¦   +---java.transaction.xa
+¦           ¦   ¦       COPYRIGHT
+¦           ¦   ¦       LICENSE
+¦           ¦   ¦       
+¦           ¦   +---java.xml
+¦           ¦   ¦       bcel.md
+¦           ¦   ¦       COPYRIGHT
+¦           ¦   ¦       dom.md
+¦           ¦   ¦       jcup.md
+¦           ¦   ¦       LICENSE
+¦           ¦   ¦       xalan.md
+¦           ¦   ¦       xerces.md
+¦           ¦   ¦       
+¦           ¦   +---jdk.unsupported
+¦           ¦           COPYRIGHT
+¦           ¦           LICENSE
+¦           ¦           
+¦           +---lib
+¦               ¦   classlist
+¦               ¦   fontconfig.bfc
+¦               ¦   fontconfig.properties.src
+¦               ¦   jawt.lib
+¦               ¦   jrt-fs.jar
+¦               ¦   jvm.cfg
+¦               ¦   jvm.lib
+¦               ¦   modules
+¦               ¦   psfont.properties.ja
+¦               ¦   psfontj2d.properties
+¦               ¦   tzdb.dat
+¦               ¦   tzmappings
+¦               ¦   
+¦               +---security
+¦                       blocked.certs
+¦                       cacerts
+¦                       default.policy
+¦                       public_suffix_list.dat
+¦                       
++---resources
+¦       styles.css
+¦       
++---runtime-pkg
+¦   ¦   release
+¦   ¦   
+¦   +---bin
+¦   ¦   ¦   api-ms-win-core-console-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-core-console-l1-2-0.dll
+¦   ¦   ¦   api-ms-win-core-datetime-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-core-debug-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-core-errorhandling-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-core-fibers-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-core-fibers-l1-1-1.dll
+¦   ¦   ¦   api-ms-win-core-file-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-core-file-l1-2-0.dll
+¦   ¦   ¦   api-ms-win-core-file-l2-1-0.dll
+¦   ¦   ¦   api-ms-win-core-handle-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-core-heap-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-core-interlocked-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-core-kernel32-legacy-l1-1-1.dll
+¦   ¦   ¦   api-ms-win-core-libraryloader-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-core-localization-l1-2-0.dll
+¦   ¦   ¦   api-ms-win-core-memory-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-core-namedpipe-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-core-processenvironment-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-core-processthreads-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-core-processthreads-l1-1-1.dll
+¦   ¦   ¦   api-ms-win-core-profile-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-core-rtlsupport-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-core-string-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-core-synch-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-core-synch-l1-2-0.dll
+¦   ¦   ¦   api-ms-win-core-sysinfo-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-core-sysinfo-l1-2-0.dll
+¦   ¦   ¦   api-ms-win-core-timezone-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-core-util-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-crt-conio-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-crt-convert-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-crt-environment-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-crt-filesystem-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-crt-heap-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-crt-locale-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-crt-math-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-crt-multibyte-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-crt-private-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-crt-process-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-crt-runtime-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-crt-stdio-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-crt-string-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-crt-time-l1-1-0.dll
+¦   ¦   ¦   api-ms-win-crt-utility-l1-1-0.dll
+¦   ¦   ¦   awt.dll
+¦   ¦   ¦   fontmanager.dll
+¦   ¦   ¦   freetype.dll
+¦   ¦   ¦   java.dll
+¦   ¦   ¦   java.exe
+¦   ¦   ¦   javajpeg.dll
+¦   ¦   ¦   javaw.exe
+¦   ¦   ¦   jawt.dll
+¦   ¦   ¦   jimage.dll
+¦   ¦   ¦   jli.dll
+¦   ¦   ¦   jrunscript.exe
+¦   ¦   ¦   jsound.dll
+¦   ¦   ¦   keytool.exe
+¦   ¦   ¦   lcms.dll
+¦   ¦   ¦   mlib_image.dll
+¦   ¦   ¦   msvcp140.dll
+¦   ¦   ¦   net.dll
+¦   ¦   ¦   nio.dll
+¦   ¦   ¦   prefs.dll
+¦   ¦   ¦   splashscreen.dll
+¦   ¦   ¦   syslookup.dll
+¦   ¦   ¦   ucrtbase.dll
+¦   ¦   ¦   vcruntime140.dll
+¦   ¦   ¦   vcruntime140_1.dll
+¦   ¦   ¦   verify.dll
+¦   ¦   ¦   zip.dll
+¦   ¦   ¦   
+¦   ¦   +---server
+¦   ¦           jvm.dll
+¦   ¦           
+¦   +---conf
+¦   ¦   ¦   jaxp.properties
+¦   ¦   ¦   logging.properties
+¦   ¦   ¦   net.properties
+¦   ¦   ¦   sound.properties
+¦   ¦   ¦   
+¦   ¦   +---security
+¦   ¦       ¦   java.policy
+¦   ¦       ¦   java.security
+¦   ¦       ¦   
+¦   ¦       +---policy
+¦   ¦           ¦   README.txt
+¦   ¦           ¦   
+¦   ¦           +---limited
+¦   ¦           ¦       default_local.policy
+¦   ¦           ¦       default_US_export.policy
+¦   ¦           ¦       exempt_local.policy
+¦   ¦           ¦       
+¦   ¦           +---unlimited
+¦   ¦                   default_local.policy
+¦   ¦                   default_US_export.policy
+¦   ¦                   
+¦   +---legal
+¦   ¦   +---java.base
+¦   ¦   ¦       aes.md
+¦   ¦   ¦       asm.md
+¦   ¦   ¦       c-libutl.md
+¦   ¦   ¦       cldr.md
+¦   ¦   ¦       COPYRIGHT
+¦   ¦   ¦       icu.md
+¦   ¦   ¦       LICENSE
+¦   ¦   ¦       public_suffix.md
+¦   ¦   ¦       siphash.md
+¦   ¦   ¦       unicode.md
+¦   ¦   ¦       wepoll.md
+¦   ¦   ¦       zlib.md
+¦   ¦   ¦       
+¦   ¦   +---java.datatransfer
+¦   ¦   ¦       COPYRIGHT
+¦   ¦   ¦       LICENSE
+¦   ¦   ¦       
+¦   ¦   +---java.desktop
+¦   ¦   ¦       colorimaging.md
+¦   ¦   ¦       COPYRIGHT
+¦   ¦   ¦       freetype.md
+¦   ¦   ¦       giflib.md
+¦   ¦   ¦       harfbuzz.md
+¦   ¦   ¦       jpeg.md
+¦   ¦   ¦       lcms.md
+¦   ¦   ¦       libpng.md
+¦   ¦   ¦       LICENSE
+¦   ¦   ¦       mesa3d.md
+¦   ¦   ¦       
+¦   ¦   +---java.logging
+¦   ¦   ¦       COPYRIGHT
+¦   ¦   ¦       LICENSE
+¦   ¦   ¦       
+¦   ¦   +---java.naming
+¦   ¦   ¦       COPYRIGHT
+¦   ¦   ¦       LICENSE
+¦   ¦   ¦       
+¦   ¦   +---java.net.http
+¦   ¦   ¦       COPYRIGHT
+¦   ¦   ¦       LICENSE
+¦   ¦   ¦       
+¦   ¦   +---java.prefs
+¦   ¦   ¦       COPYRIGHT
+¦   ¦   ¦       LICENSE
+¦   ¦   ¦       
+¦   ¦   +---java.scripting
+¦   ¦   ¦       COPYRIGHT
+¦   ¦   ¦       LICENSE
+¦   ¦   ¦       
+¦   ¦   +---java.security.sasl
+¦   ¦   ¦       COPYRIGHT
+¦   ¦   ¦       LICENSE
+¦   ¦   ¦       
+¦   ¦   +---java.sql
+¦   ¦   ¦       COPYRIGHT
+¦   ¦   ¦       LICENSE
+¦   ¦   ¦       
+¦   ¦   +---java.transaction.xa
+¦   ¦   ¦       COPYRIGHT
+¦   ¦   ¦       LICENSE
+¦   ¦   ¦       
+¦   ¦   +---java.xml
+¦   ¦   ¦       bcel.md
+¦   ¦   ¦       COPYRIGHT
+¦   ¦   ¦       dom.md
+¦   ¦   ¦       jcup.md
+¦   ¦   ¦       LICENSE
+¦   ¦   ¦       xalan.md
+¦   ¦   ¦       xerces.md
+¦   ¦   ¦       
+¦   ¦   +---jdk.unsupported
+¦   ¦           COPYRIGHT
+¦   ¦           LICENSE
+¦   ¦           
+¦   +---lib
+¦       ¦   classlist
+¦       ¦   fontconfig.bfc
+¦       ¦   fontconfig.properties.src
+¦       ¦   jawt.lib
+¦       ¦   jrt-fs.jar
+¦       ¦   jvm.cfg
+¦       ¦   jvm.lib
+¦       ¦   modules
+¦       ¦   psfont.properties.ja
+¦       ¦   psfontj2d.properties
+¦       ¦   tzdb.dat
+¦       ¦   tzmappings
+¦       ¦   
+¦       +---security
+¦               blocked.certs
+¦               cacerts
+¦               default.policy
+¦               public_suffix_list.dat
+¦               
++---src
+    +---main
+        +---java
+            +---app
+            ¦       AccountNumberGenerator.java
+            ¦       App.java
+            ¦       DatabaseInit.java
+            ¦       LoginGUI.java
+            ¦       UsuarioManager.java
+            ¦       VoucherGenerator.java
+            ¦       
+            +---client
+            ¦       Cliente.java
+            ¦       ClienteGUI.java
+            ¦       
+            +---protocol
+            ¦       Frame.java
+            ¦       FrameParser.java
+            ¦       ProtocolConstants.java
+            ¦       TransactionProcessor.java
+            ¦       
+            +---server
+                    Servidor.java
+                    ServidorGUI.java
+                    

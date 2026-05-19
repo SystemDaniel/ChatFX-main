@@ -587,14 +587,6 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
         }
     }
 
-    private void mostrarAlerta(String titulo, String contenido) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(titulo);
-        alert.setHeaderText(null);
-        alert.setContentText(contenido);
-        alert.showAndWait();
-    }
-
     public static void main(String[] args) {
         launch(args);
     }

@@ -20,6 +20,9 @@ public class LoginGUI extends Application {
     private UsuarioManager usuarioManager = UsuarioManager.getInstance();
     private Stage miStage;
     private VBox panel;
+    private Button btnLogin;
+    private Button btnRegistro;
+    private Button btnCancelar;
 
     @Override
     public void start(Stage primaryStage) {
@@ -73,17 +76,23 @@ public class LoginGUI extends Application {
         labelEstado = new Label("");
         labelEstado.setStyle("-fx-text-fill: #d32f2f;");
 
-        Button btnLogin = new Button("Iniciar Sesión");
+        btnLogin = new Button("Iniciar Sesión");
         btnLogin.setPrefHeight(45);
         btnLogin.setStyle("-fx-font-size: 14; -fx-padding: 10; -fx-background-color: #2196F3; -fx-text-fill: white;");
         btnLogin.setOnAction(e -> realizarLogin());
 
-        Button btnRegistro = new Button("Registrarse");
+        btnRegistro = new Button("Registrarse");
         btnRegistro.setPrefHeight(45);
         btnRegistro.setStyle("-fx-font-size: 14; -fx-padding: 10; -fx-background-color: #4CAF50; -fx-text-fill: white;");
-        btnRegistro.setOnAction(e -> mostrarRegistro());
+        btnRegistro.setOnAction(e -> {
+            if (esRegistro) {
+                realizarLogin();
+            } else {
+                mostrarRegistro();
+            }
+        });
 
-        Button btnCancelar = new Button("Cancelar");
+        btnCancelar = new Button("Cancelar");
         btnCancelar.setPrefHeight(45);
         btnCancelar.setStyle("-fx-font-size: 14; -fx-padding: 10; -fx-background-color: #757575; -fx-text-fill: white;");
         btnCancelar.setOnAction(e -> cerrar());
@@ -125,17 +134,33 @@ public class LoginGUI extends Application {
             }
 
             if (usuarioManager.registrar(usuario, contraseña, "")) {
-                mostrarExito("¡Registro exitoso! Ahora inicia sesión");
-                mostrarLogin();
+                mostrarExito("¡Registro exitoso! Regresando a inicio de sesión...");
+                // Regresar automáticamente a login después de 2 segundos
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(2000);
+                        javafx.application.Platform.runLater(() -> mostrarLogin());
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }).start();
             } else {
-                mostrarError("Error en registro. Usuario puede estar en uso");
+                String error = usuarioManager.getUltimoError();
+                if (error == null || error.isEmpty()) {
+                    error = "Error en registro. Usuario puede estar en uso";
+                }
+                mostrarError(error);
             }
         } else {
             if (usuarioManager.login(usuario, contraseña)) {
                 mostrarExito("¡Login exitoso!");
                 abrirChat(usuario);
             } else {
-                mostrarError("Usuario o contraseña incorrectos");
+                String error = usuarioManager.getUltimoError();
+                if (error == null || error.isEmpty()) {
+                    error = "Usuario o contraseña incorrectos";
+                }
+                mostrarError(error);
             }
         }
     }
@@ -146,6 +171,10 @@ public class LoginGUI extends Application {
         lblContraseña2.setManaged(true);
         campoContraseña2.setVisible(true);
         campoContraseña2.setManaged(true);
+        btnLogin.setVisible(false);
+        btnLogin.setManaged(false);
+        btnRegistro.setText("Confirmar Registro");
+        btnRegistro.setStyle("-fx-font-size: 14; -fx-padding: 10; -fx-background-color: #4CAF50; -fx-text-fill: white;");
         limpiarCampos();
         mostrarInfo("Ingresa tus datos para registrarte");
     }
@@ -156,6 +185,10 @@ public class LoginGUI extends Application {
         lblContraseña2.setManaged(false);
         campoContraseña2.setVisible(false);
         campoContraseña2.setManaged(false);
+        btnLogin.setVisible(true);
+        btnLogin.setManaged(true);
+        btnRegistro.setText("Registrarse");
+        btnRegistro.setStyle("-fx-font-size: 14; -fx-padding: 10; -fx-background-color: #4CAF50; -fx-text-fill: white;");
         limpiarCampos();
         labelEstado.setText("");
     }
@@ -167,18 +200,21 @@ public class LoginGUI extends Application {
     }
 
     private void mostrarError(String mensaje) {
-        labelEstado.setText(mensaje);
-        labelEstado.setStyle("-fx-text-fill: #d32f2f;");
+        labelEstado.setText("❌ " + mensaje);
+        labelEstado.setStyle("-fx-text-fill: #d32f2f; -fx-font-size: 12; -fx-font-weight: bold;");
+        System.err.println("[ERROR UI] " + mensaje);
     }
 
     private void mostrarExito(String mensaje) {
-        labelEstado.setText(mensaje);
-        labelEstado.setStyle("-fx-text-fill: #4CAF50;");
+        labelEstado.setText("✓ " + mensaje);
+        labelEstado.setStyle("-fx-text-fill: #4CAF50; -fx-font-size: 12; -fx-font-weight: bold;");
+        System.out.println("[ÉXITO] " + mensaje);
     }
 
     private void mostrarInfo(String mensaje) {
-        labelEstado.setText(mensaje);
-        labelEstado.setStyle("-fx-text-fill: #666666;");
+        labelEstado.setText("ℹ " + mensaje);
+        labelEstado.setStyle("-fx-text-fill: #1976d2; -fx-font-size: 11;");
+        System.out.println("[INFO] " + mensaje);
     }
 
     private void abrirChat(String usuario) {
