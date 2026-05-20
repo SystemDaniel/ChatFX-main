@@ -5,8 +5,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Procesador de transacciones bancarias.
- * Mantiene información de cuentas y procesa operaciones.
+ * Procesador de transacciones bancarias - Formato del Banco
+ * Estructura: TRANSAC|TIPO_OPERACION|CUENTA_ORIGEN|CUENTA_DESTINO|MONTO|CONCEPTO
+ * Respuesta: RESPUESTA|STATUS|DESCRIPCION
  */
 public class TransactionProcessor {
     private Map<Long, BankAccount> cuentas;
@@ -26,253 +27,263 @@ public class TransactionProcessor {
         cuentas.put(10000001L, new BankAccount(10000001L, "Juan Pérez", 5000.0));
         cuentas.put(10000002L, new BankAccount(10000002L, "María García", 3500.0));
         cuentas.put(10000003L, new BankAccount(10000003L, "Carlos López", 10000.0));
+        
+        System.out.println("[BANCO] Cuentas de prueba cargadas:");
+        for (BankAccount cuenta : cuentas.values()) {
+            System.out.println("  - " + cuenta.getTitular() + " (" + cuenta.getNumero() + "): $" + cuenta.getSaldo());
+        }
     }
 
     /**
-     * Procesa una trama de depósito
+     * Procesa una trama según su tipo de operación
+     * @param trama Frame con formato: TRANSAC|TIPO|CUENTA_ORIGEN|CUENTA_DESTINO|MONTO|CONCEPTO
+     * @return Frame respuesta: RESPUESTA|STATUS|DESCRIPCION
      */
-    public Frame procesarDeposito(Frame trama) {
-        Frame respuesta = new Frame("RESPUESTA");
-        respuesta.campo("ID_OPERACION", trama.getId());
+    public Frame procesarTrama(Frame trama) {
+        if (trama == null) {
+            System.err.println("[BANCO] Error: Trama nula");
+            return new Frame(ProtocolConstants.STATUS_ERROR, "Trama nula recibida");
+        }
 
+        if (!FrameParser.esValida(trama)) {
+            String error = FrameParser.obtenerErrorValidacion(trama.toString());
+            System.err.println("[BANCO] Trama inválida: " + error);
+            return new Frame(ProtocolConstants.STATUS_ERROR, error);
+        }
+
+        String tipoOperacion = trama.getTipoOperacion();
+        System.out.println("[BANCO] Procesando: " + tipoOperacion);
+
+        switch (tipoOperacion.toUpperCase()) {
+            case ProtocolConstants.TIPO_DEPOSITO:
+                return procesarDeposito(trama);
+            case ProtocolConstants.TIPO_RETIRO:
+                return procesarRetiro(trama);
+            case ProtocolConstants.TIPO_CONSULTA:
+                return procesarConsulta(trama);
+            case ProtocolConstants.TIPO_DEBITO:
+                return procesarDebito(trama);
+            case ProtocolConstants.TIPO_TRANSFERENCIA:
+                return procesarTransferencia(trama);
+            default:
+                System.err.println("[BANCO] Operación no reconocida: " + tipoOperacion);
+                return new Frame(ProtocolConstants.STATUS_ERROR, "Operación no reconocida: " + tipoOperacion);
+        }
+    }
+
+    /**
+     * Procesa DEPOSITO: mueve fondos a una cuenta
+     * TRANSAC|DEPOSITO|CUENTA_ORIGEN|CUENTA_DESTINO|MONTO|CONCEPTO
+     */
+    private Frame procesarDeposito(Frame trama) {
         try {
-            long numeroCuenta = trama.obtenerLong("CUENTA");
-            double monto = trama.obtenerDouble("MONTO");
+            long cuentaDestino = trama.getCuentaDestino();
+            double monto = trama.getMonto();
+            String concepto = trama.getConcepto();
 
+            // Validar monto
             if (monto <= 0) {
-                respuesta.campo("ESTADO", "ERROR");
-                respuesta.campo("MENSAJE", "Monto debe ser mayor a 0");
-                respuesta.campo("CODIGO", "MONTO_INVALIDO");
-                return respuesta;
+                System.out.println("[BANCO] Depósito rechazado: Monto inválido (" + monto + ")");
+                return new Frame(ProtocolConstants.STATUS_ERROR, ProtocolConstants.ERR_MONTO_INVALIDO);
             }
 
-            BankAccount cuenta = cuentas.get(numeroCuenta);
+            // Validar cuenta destino
+            BankAccount cuenta = cuentas.get(cuentaDestino);
             if (cuenta == null) {
-                respuesta.campo("ESTADO", "ERROR");
-                respuesta.campo("MENSAJE", "Cuenta no encontrada");
-                respuesta.campo("CODIGO", "CUENTA_NO_EXISTE");
-                return respuesta;
+                System.out.println("[BANCO] Depósito rechazado: Cuenta " + cuentaDestino + " no existe");
+                return new Frame(ProtocolConstants.STATUS_ERROR, ProtocolConstants.ERR_CUENTA_NO_EXISTE);
             }
 
+            // Realizar depósito
             double saldoAnterior = cuenta.getSaldo();
             cuenta.depositar(monto);
             double saldoNuevo = cuenta.getSaldo();
 
-            respuesta.campo("ESTADO", "OK");
-            respuesta.campo("MENSAJE", "Depósito realizado exitosamente");
-            respuesta.campo("CUENTA", numeroCuenta);
-            respuesta.campo("MONTO_DEPOSITADO", monto);
-            respuesta.campo("SALDO_ANTERIOR", saldoAnterior);
-            respuesta.campo("SALDO_NUEVO", saldoNuevo);
-            respuesta.campo("CODIGO", "OPERACION_EXITOSA");
-
-            registrarTransaccion("DEPOSITO", numeroCuenta, monto, "OK");
+            String respuesta = String.format("Depósito exitoso. Saldo anterior: $%.2f, Nuevo: $%.2f", saldoAnterior, saldoNuevo);
+            System.out.println("[BANCO] ✓ " + respuesta);
+            
+            registrarTransaccion(ProtocolConstants.TIPO_DEPOSITO, cuentaDestino, monto, ProtocolConstants.STATUS_OK);
+            return new Frame(ProtocolConstants.STATUS_OK, respuesta);
 
         } catch (Exception e) {
-            respuesta.campo("ESTADO", "ERROR");
-            respuesta.campo("MENSAJE", "Error procesando depósito: " + e.getMessage());
-            respuesta.campo("CODIGO", "ERROR_INTERNO");
+            System.err.println("[BANCO] Error en depósito: " + e.getMessage());
+            return new Frame(ProtocolConstants.STATUS_ERROR, "Error procesando depósito: " + e.getMessage());
         }
-
-        return respuesta;
     }
 
     /**
-     * Procesa una trama de retiro
+     * Procesa RETIRO: usa cuenta 9999 como destino
+     * TRANSAC|RETIRO|CUENTA_ORIGEN|9999|MONTO|CONCEPTO
      */
-    public Frame procesarRetiro(Frame trama) {
-        Frame respuesta = new Frame("RESPUESTA");
-        respuesta.campo("ID_OPERACION", trama.getId());
-
+    private Frame procesarRetiro(Frame trama) {
         try {
-            long numeroCuenta = trama.obtenerLong("CUENTA");
-            double monto = trama.obtenerDouble("MONTO");
+            long cuentaOrigen = trama.getCuentaOrigen();
+            double monto = trama.getMonto();
+            String concepto = trama.getConcepto();
 
+            // Validar monto
             if (monto <= 0) {
-                respuesta.campo("ESTADO", "ERROR");
-                respuesta.campo("MENSAJE", "Monto debe ser mayor a 0");
-                respuesta.campo("CODIGO", "MONTO_INVALIDO");
-                return respuesta;
+                System.out.println("[BANCO] Retiro rechazado: Monto inválido");
+                return new Frame(ProtocolConstants.STATUS_ERROR, ProtocolConstants.ERR_MONTO_INVALIDO);
             }
 
-            BankAccount cuenta = cuentas.get(numeroCuenta);
+            // Validar cuenta origen
+            BankAccount cuenta = cuentas.get(cuentaOrigen);
             if (cuenta == null) {
-                respuesta.campo("ESTADO", "ERROR");
-                respuesta.campo("MENSAJE", "Cuenta no encontrada");
-                respuesta.campo("CODIGO", "CUENTA_NO_EXISTE");
-                return respuesta;
+                System.out.println("[BANCO] Retiro rechazado: Cuenta " + cuentaOrigen + " no existe");
+                return new Frame(ProtocolConstants.STATUS_ERROR, ProtocolConstants.ERR_CUENTA_NO_EXISTE);
             }
 
+            // Validar saldo suficiente
             if (cuenta.getSaldo() < monto) {
-                respuesta.campo("ESTADO", "ERROR");
-                respuesta.campo("MENSAJE", "Saldo insuficiente");
-                respuesta.campo("CODIGO", "SALDO_INSUFICIENTE");
-                respuesta.campo("SALDO_DISPONIBLE", cuenta.getSaldo());
-                respuesta.campo("MONTO_SOLICITADO", monto);
-                return respuesta;
+                String error = String.format("Saldo insuficiente. Disponible: $%.2f, Solicitado: $%.2f", 
+                    cuenta.getSaldo(), monto);
+                System.out.println("[BANCO] Retiro rechazado: " + error);
+                return new Frame(ProtocolConstants.STATUS_ERROR, ProtocolConstants.ERR_SALDO_INSUFICIENTE + ": " + error);
             }
 
+            // Realizar retiro
             double saldoAnterior = cuenta.getSaldo();
             cuenta.retirar(monto);
             double saldoNuevo = cuenta.getSaldo();
 
-            respuesta.campo("ESTADO", "OK");
-            respuesta.campo("MENSAJE", "Retiro realizado exitosamente");
-            respuesta.campo("CUENTA", numeroCuenta);
-            respuesta.campo("MONTO_RETIRADO", monto);
-            respuesta.campo("SALDO_ANTERIOR", saldoAnterior);
-            respuesta.campo("SALDO_NUEVO", saldoNuevo);
-            respuesta.campo("CODIGO", "OPERACION_EXITOSA");
-
-            registrarTransaccion("RETIRO", numeroCuenta, monto, "OK");
+            String respuesta = String.format("Retiro exitoso. Saldo anterior: $%.2f, Nuevo: $%.2f", saldoAnterior, saldoNuevo);
+            System.out.println("[BANCO] ✓ " + respuesta);
+            
+            registrarTransaccion(ProtocolConstants.TIPO_RETIRO, cuentaOrigen, monto, ProtocolConstants.STATUS_OK);
+            return new Frame(ProtocolConstants.STATUS_OK, respuesta);
 
         } catch (Exception e) {
-            respuesta.campo("ESTADO", "ERROR");
-            respuesta.campo("MENSAJE", "Error procesando retiro: " + e.getMessage());
-            respuesta.campo("CODIGO", "ERROR_INTERNO");
+            System.err.println("[BANCO] Error en retiro: " + e.getMessage());
+            return new Frame(ProtocolConstants.STATUS_ERROR, "Error procesando retiro: " + e.getMessage());
         }
-
-        return respuesta;
     }
-
+ 
     /**
-     * Procesa una trama de consulta de saldo
+     * Procesa CONSULTA: usa destino = 9999 y monto = 0.0
+     * TRANSAC|CONSULTA|CUENTA_ORIGEN|9999|0.0|CONCEPTO
      */
-    public Frame procesarConsulta(Frame trama) {
-        Frame respuesta = new Frame("RESPUESTA");
-        respuesta.campo("ID_OPERACION", trama.getId());
-
+    private Frame procesarConsulta(Frame trama) {
         try {
-            long numeroCuenta = trama.obtenerLong("CUENTA");
+            long cuentaOrigen = trama.getCuentaOrigen();
 
-            BankAccount cuenta = cuentas.get(numeroCuenta);
+            // Validar cuenta
+            BankAccount cuenta = cuentas.get(cuentaOrigen);
             if (cuenta == null) {
-                respuesta.campo("ESTADO", "ERROR");
-                respuesta.campo("MENSAJE", "Cuenta no encontrada");
-                respuesta.campo("CODIGO", "CUENTA_NO_EXISTE");
-                return respuesta;
+                System.out.println("[BANCO] Consulta rechazada: Cuenta " + cuentaOrigen + " no existe");
+                return new Frame(ProtocolConstants.STATUS_ERROR, ProtocolConstants.ERR_CUENTA_NO_EXISTE);
             }
 
-            respuesta.campo("ESTADO", "OK");
-            respuesta.campo("MENSAJE", "Consulta realizada exitosamente");
-            respuesta.campo("CUENTA", numeroCuenta);
-            respuesta.campo("TITULAR", cuenta.getTitular());
-            respuesta.campo("SALDO", cuenta.getSaldo());
-            respuesta.campo("CODIGO", "OPERACION_EXITOSA");
-
-            registrarTransaccion("CONSULTA", numeroCuenta, 0, "OK");
+            String respuesta = String.format("Saldo de %s (Cuenta %d): $%.2f", 
+                cuenta.getTitular(), cuenta.getNumero(), cuenta.getSaldo());
+            System.out.println("[BANCO] ✓ " + respuesta);
+            
+            registrarTransaccion(ProtocolConstants.TIPO_CONSULTA, cuentaOrigen, 0, ProtocolConstants.STATUS_OK);
+            return new Frame(ProtocolConstants.STATUS_OK, respuesta);
 
         } catch (Exception e) {
-            respuesta.campo("ESTADO", "ERROR");
-            respuesta.campo("MENSAJE", "Error procesando consulta: " + e.getMessage());
-            respuesta.campo("CODIGO", "ERROR_INTERNO");
+            System.err.println("[BANCO] Error en consulta: " + e.getMessage());
+            return new Frame(ProtocolConstants.STATUS_ERROR, "Error procesando consulta: " + e.getMessage());
         }
-
-        return respuesta;
     }
 
     /**
-     * Procesa una trama de transferencia
-     */
-    public Frame procesarTransferencia(Frame trama) {
-        Frame respuesta = new Frame("RESPUESTA");
-        respuesta.campo("ID_OPERACION", trama.getId());
-
+     * Procesa DEBITO: cobro automático de una cuenta
+     * TRANSAC|DEBITO|CUENTA_ORIGEN|CUENTA_DESTINO|MONTO|CONCEPTO
+    */
+    private Frame procesarDebito(Frame trama) {
         try {
-            long cuentaOrigen = trama.obtenerLong("CUENTA_ORIGEN");
-            long cuentaDestino = trama.obtenerLong("CUENTA_DESTINO");
-            double monto = trama.obtenerDouble("MONTO");
+            long cuentaOrigen = trama.getCuentaOrigen();
+            long cuentaDestino = trama.getCuentaDestino();
+            double monto = trama.getMonto();
+            String concepto = trama.getConcepto();
 
+            // Validar monto
             if (monto <= 0) {
-                respuesta.campo("ESTADO", "ERROR");
-                respuesta.campo("MENSAJE", "Monto debe ser mayor a 0");
-                respuesta.campo("CODIGO", "MONTO_INVALIDO");
-                return respuesta;
+                System.out.println("[BANCO] Débito rechazado: Monto inválido");
+                return new Frame(ProtocolConstants.STATUS_ERROR, ProtocolConstants.ERR_MONTO_INVALIDO);
             }
 
+            // Validar cuentas
+            BankAccount origen = cuentas.get(cuentaOrigen);
+            if (origen == null) {
+                System.out.println("[BANCO] Débito rechazado: Cuenta origen no existe");
+                return new Frame(ProtocolConstants.STATUS_ERROR, ProtocolConstants.ERR_CUENTA_NO_EXISTE);
+            }
+
+            // Validar saldo
+            if (origen.getSaldo() < monto) {
+                return new Frame(ProtocolConstants.STATUS_ERROR, ProtocolConstants.ERR_SALDO_INSUFICIENTE);
+            }
+
+            // Realizar débito
+            double saldoAnterior = origen.getSaldo();
+            origen.retirar(monto);
+            double saldoNuevo = origen.getSaldo();
+
+            String respuesta = String.format("Débito exitoso. Saldo anterior: $%.2f, Nuevo: $%.2f", saldoAnterior, saldoNuevo);
+            System.out.println("[BANCO] ✓ " + respuesta);
+            
+            registrarTransaccion(ProtocolConstants.TIPO_DEBITO, cuentaOrigen, monto, ProtocolConstants.STATUS_OK);
+            return new Frame(ProtocolConstants.STATUS_OK, respuesta);
+
+        } catch (Exception e) {
+            System.err.println("[BANCO] Error en débito: " + e.getMessage());
+            return new Frame(ProtocolConstants.STATUS_ERROR, "Error procesando débito: " + e.getMessage());
+        }
+    }  
+
+    /**
+     * Procesa TRANSFERENCIA: transfiere fondos entre cuentas
+     * TRANSAC|TRANSFERENCIA|CUENTA_ORIGEN|CUENTA_DESTINO|MONTO|CONCEPTO
+     */
+    private Frame procesarTransferencia(Frame trama) {
+        try {
+            long cuentaOrigen = trama.getCuentaOrigen();
+            long cuentaDestino = trama.getCuentaDestino();
+            double monto = trama.getMonto();
+            String concepto = trama.getConcepto();
+
+            // Validar monto
+            if (monto <= 0) {
+                return new Frame(ProtocolConstants.STATUS_ERROR, ProtocolConstants.ERR_MONTO_INVALIDO);
+            }
+
+            // No puede transferir a la misma cuenta
             if (cuentaOrigen == cuentaDestino) {
-                respuesta.campo("ESTADO", "ERROR");
-                respuesta.campo("MENSAJE", "No puedes transferir a la misma cuenta");
-                respuesta.campo("CODIGO", "CUENTA_ORIGEN_IGUAL_DESTINO");
-                return respuesta;
+                return new Frame(ProtocolConstants.STATUS_ERROR, ProtocolConstants.ERR_CUENTA_ORIGEN_IGUAL_DESTINO);
             }
 
+            // Validar ambas cuentas
             BankAccount origen = cuentas.get(cuentaOrigen);
             BankAccount destino = cuentas.get(cuentaDestino);
 
             if (origen == null || destino == null) {
-                respuesta.campo("ESTADO", "ERROR");
-                respuesta.campo("MENSAJE", "Una o ambas cuentas no existen");
-                respuesta.campo("CODIGO", "CUENTA_NO_EXISTE");
-                return respuesta;
+                System.out.println("[BANCO] Transferencia rechazada: Cuenta no existe");
+                return new Frame(ProtocolConstants.STATUS_ERROR, ProtocolConstants.ERR_CUENTA_NO_EXISTE);
             }
 
+            // Validar saldo origen
             if (origen.getSaldo() < monto) {
-                respuesta.campo("ESTADO", "ERROR");
-                respuesta.campo("MENSAJE", "Saldo insuficiente en cuenta origen");
-                respuesta.campo("CODIGO", "SALDO_INSUFICIENTE");
-                respuesta.campo("SALDO_DISPONIBLE", origen.getSaldo());
-                return respuesta;
+                return new Frame(ProtocolConstants.STATUS_ERROR, ProtocolConstants.ERR_SALDO_INSUFICIENTE);
             }
+
+            // Realizar transferencia
+            double saldoOrigenAntes = origen.getSaldo();
+            double saldoDestinoAntes = destino.getSaldo();
 
             origen.retirar(monto);
             destino.depositar(monto);
 
-            respuesta.campo("ESTADO", "OK");
-            respuesta.campo("MENSAJE", "Transferencia realizada exitosamente");
-            respuesta.campo("CUENTA_ORIGEN", cuentaOrigen);
-            respuesta.campo("CUENTA_DESTINO", cuentaDestino);
-            respuesta.campo("MONTO_TRANSFERIDO", monto);
-            respuesta.campo("SALDO_ORIGEN", origen.getSaldo());
-            respuesta.campo("SALDO_DESTINO", destino.getSaldo());
-            respuesta.campo("CODIGO", "OPERACION_EXITOSA");
-
-            registrarTransaccion("TRANSFERENCIA", cuentaOrigen, monto, "OK");
+            String respuesta = String.format("Transferencia exitosa. De $%.2f a $%.2f", saldoOrigenAntes, saldoDestinoAntes);
+            System.out.println("[BANCO] ✓ " + respuesta);
+            
+            registrarTransaccion(ProtocolConstants.TIPO_TRANSFERENCIA, cuentaOrigen, monto, ProtocolConstants.STATUS_OK);
+            return new Frame(ProtocolConstants.STATUS_OK, respuesta);
 
         } catch (Exception e) {
-            respuesta.campo("ESTADO", "ERROR");
-            respuesta.campo("MENSAJE", "Error procesando transferencia: " + e.getMessage());
-            respuesta.campo("CODIGO", "ERROR_INTERNO");
-        }
-
-        return respuesta;
-    }
-
-    /**
-     * Procesa una trama según su tipo
-     */
-    public Frame procesarTrama(Frame trama) {
-        if (trama == null) {
-            Frame error = new Frame("RESPUESTA");
-            error.campo("ESTADO", "ERROR");
-            error.campo("MENSAJE", "Trama nula recibida");
-            error.campo("CODIGO", "TRAMA_NULA");
-            return error;
-        }
-
-        if (!FrameParser.esValida(trama)) {
-            Frame error = new Frame("RESPUESTA");
-            error.campo("ESTADO", "ERROR");
-            error.campo("MENSAJE", "Trama inválida: " + FrameParser.obtenerErrorValidacion(trama.toString()));
-            error.campo("CODIGO", "TRAMA_INVALIDA");
-            return error;
-        }
-
-        switch (trama.getTipo().toUpperCase()) {
-            case "DEPOSITO":
-                return procesarDeposito(trama);
-            case "RETIRO":
-                return procesarRetiro(trama);
-            case "CONSULTA":
-                return procesarConsulta(trama);
-            case "TRANSFERENCIA":
-                return procesarTransferencia(trama);
-            default:
-                Frame error = new Frame("RESPUESTA");
-                error.campo("ESTADO", "ERROR");
-                error.campo("MENSAJE", "Tipo de operación no reconocida: " + trama.getTipo());
-                error.campo("CODIGO", "OPERACION_DESCONOCIDA");
-                return error;
+            System.err.println("[BANCO] Error en transferencia: " + e.getMessage());
+            return new Frame(ProtocolConstants.STATUS_ERROR, "Error procesando transferencia: " + e.getMessage());
         }
     }
 

@@ -1,55 +1,81 @@
 package protocol;
 
 /**
- * Parser para convertir strings en Frame objects y validar formato.
- * Maneja el parsing de tramas según el protocolo definido.
+ * Parser para convertir strings en Frame objects - Formato del Banco
+ * Maneja parsing de tramas: TRANSAC|TIPO|CUENTA_ORIGEN|CUENTA_DESTINO|MONTO|CONCEPTO
+ *                          RESPUESTA|STATUS|DESCRIPCION
  */
 public class FrameParser {
     
     /**
      * Parsea un string y lo convierte en un Frame object
-     * @param data String en formato: <INICIO>|TIPO:tipo|CAMPO1:valor1|CAMPO2:valor2|FIN
+     * @param data String en formato: TRANSAC|TIPO|CUENTA_ORIGEN|CUENTA_DESTINO|MONTO|CONCEPTO
      * @return Frame object o null si está mal formado
      */
     public static Frame parsear(String data) {
         if (data == null || data.isEmpty()) {
+            System.err.println("[PARSER] Error: Trama vacía");
             return null;
         }
-
-        // Verificar inicio y fin
-        if (!data.startsWith("<INICIO>") || !data.endsWith("|FIN")) {
-            return null;
-        }
-
-        // Remover marcas de inicio y fin
-        String contenido = data.substring("<INICIO>|".length());
-        contenido = contenido.substring(0, contenido.length() - "|FIN".length());
 
         // Dividir por pipes
-        String[] partes = contenido.split("\\|");
-        
-        if (partes.length == 0) {
+        String[] partes = data.split("\\|", -1);
+
+        if (partes.length < 2) {
+            System.err.println("[PARSER] Error: Trama incompleta. Partes: " + partes.length);
             return null;
         }
 
-        // Primera parte debe ser TIPO:tipo
-        String[] tipoPartes = partes[0].split(":", 2);
-        if (tipoPartes.length != 2 || !tipoPartes[0].equals("TIPO")) {
-            return null;
-        }
+        // Verificar si es transacción o respuesta
+        String tipoComando = partes[0];
 
-        String tipo = tipoPartes[1];
-        Frame frame = new Frame(tipo);
-
-        // Procesar campos restantes
-        for (int i = 1; i < partes.length; i++) {
-            String[] campoParte = partes[i].split(":", 2);
-            if (campoParte.length == 2) {
-                frame.campo(campoParte[0], campoParte[1]);
+        if (tipoComando.equals(ProtocolConstants.DELIMITER_TRANSAC)) {
+            // Es una transacción: TRANSAC|TIPO|CUENTA_ORIGEN|CUENTA_DESTINO|MONTO|CONCEPTO
+            if (partes.length < 6) {
+                System.err.println("[PARSER] Error: Transacción incompleta. Esperaba 6 campos, recibió: " + partes.length);
+                return null;
             }
-        }
 
-        return frame;
+            String tipoOperacion = partes[1];
+            
+            if (!ProtocolConstants.esOperacionValida(tipoOperacion)) {
+                System.err.println("[PARSER] Error: Tipo de operación inválido: " + tipoOperacion);
+                return null;
+            }
+
+            try {
+                long cuentaOrigen = Long.parseLong(partes[2]);
+                long cuentaDestino = Long.parseLong(partes[3]);
+                double monto = Double.parseDouble(partes[4]);
+                String concepto = partes.length > 5 ? partes[5] : "";
+
+                Frame frame = new Frame(tipoOperacion, cuentaOrigen, cuentaDestino, monto, concepto);
+                System.out.println("[PARSER] ✓ Transacción parseada: " + tipoOperacion);
+                return frame;
+
+            } catch (NumberFormatException e) {
+                System.err.println("[PARSER] Error: Números mal formados - " + e.getMessage());
+                return null;
+            }
+
+        } else if (tipoComando.equals(ProtocolConstants.DELIMITER_RESPUESTA)) {
+            // Es una respuesta: RESPUESTA|STATUS|DESCRIPCION
+            if (partes.length < 3) {
+                System.err.println("[PARSER] Error: Respuesta incompleta");
+                return null;
+            }
+
+            String status = partes[1];
+            String descripcion = partes.length > 2 ? partes[2] : "";
+
+            Frame frame = new Frame(status, descripcion);
+            System.out.println("[PARSER] ✓ Respuesta parseada: " + status);
+            return frame;
+
+        } else {
+            System.err.println("[PARSER] Error: Comando desconocido: " + tipoComando);
+            return null;
+        }
     }
 
     /**
@@ -60,28 +86,37 @@ public class FrameParser {
             return false;
         }
 
-        String tipo = frame.getTipo();
-        
-        // Validar según tipo de operación
-        switch (tipo) {
-            case "DEPOSITO":
-                return frame.existe("CUENTA") && frame.existe("MONTO") && frame.obtenerDouble("MONTO") > 0;
+        if (frame.esRespuesta()) {
+            // Una respuesta es válida si tiene STATUS y DESCRIPCION
+            return !frame.getStatus().isEmpty();
+        } else {
+            // Una transacción es válida si tiene todos los campos requeridos
+            String tipoOp = frame.getTipoOperacion();
             
-            case "RETIRO":
-                return frame.existe("CUENTA") && frame.existe("MONTO") && frame.obtenerDouble("MONTO") > 0;
-            
-            case "CONSULTA":
-                return frame.existe("CUENTA");
-            
-            case "RESPUESTA":
-                return frame.existe("ESTADO") && frame.existe("MENSAJE");
-            
-            case "TRANSFERENCIA":
-                return frame.existe("CUENTA_ORIGEN") && frame.existe("CUENTA_DESTINO") && 
-                       frame.existe("MONTO") && frame.obtenerDouble("MONTO") > 0;
-            
-            default:
+            if (!ProtocolConstants.esOperacionValida(tipoOp)) {
                 return false;
+            }
+
+            switch (tipoOp) {
+                case ProtocolConstants.TIPO_CONSULTA:
+                    // CONSULTA solo necesita cuenta origen
+                    return frame.getCuentaOrigen() > 0;
+
+                case ProtocolConstants.TIPO_RETIRO:
+                    // RETIRO necesita cuenta origen y monto
+                    return frame.getCuentaOrigen() > 0 && frame.getMonto() > 0;
+
+                case ProtocolConstants.TIPO_DEPOSITO:
+                case ProtocolConstants.TIPO_DEBITO:
+                case ProtocolConstants.TIPO_TRANSFERENCIA:
+                    // Estas necesitan origen, destino y monto
+                    return frame.getCuentaOrigen() > 0 && 
+                           frame.getCuentaDestino() > 0 && 
+                           frame.getMonto() > 0;
+
+                default:
+                    return false;
+            }
         }
     }
 
@@ -93,28 +128,35 @@ public class FrameParser {
             return "Trama vacía";
         }
 
-        if (!data.startsWith("<INICIO>")) {
-            return "Falta marcador de inicio <INICIO>";
+        String[] partes = data.split("\\|", -1);
+
+        if (partes.length < 2) {
+            return "Trama incompleta o mal formada";
         }
 
-        if (!data.endsWith("|FIN")) {
-            return "Falta marcador de fin |FIN";
+        String tipoComando = partes[0];
+
+        if (tipoComando.equals(ProtocolConstants.DELIMITER_TRANSAC)) {
+            if (partes.length < 6) {
+                return "Transacción incompleta. Necesita 6 campos, recibió: " + partes.length;
+            }
+
+            try {
+                Long.parseLong(partes[2]); // Cuenta origen
+                Long.parseLong(partes[3]); // Cuenta destino
+                Double.parseDouble(partes[4]); // Monto
+            } catch (NumberFormatException e) {
+                return "Números mal formados en transacción";
+            }
+
+        } else if (tipoComando.equals(ProtocolConstants.DELIMITER_RESPUESTA)) {
+            if (partes.length < 3) {
+                return "Respuesta incompleta";
+            }
+        } else {
+            return "Comando desconocido: " + tipoComando;
         }
 
-        String contenido = data.substring("<INICIO>|".length());
-        contenido = contenido.substring(0, contenido.length() - "|FIN".length());
-        
-        String[] partes = contenido.split("\\|");
-        
-        if (partes.length == 0) {
-            return "Trama sin contenido";
-        }
-
-        String[] tipoPartes = partes[0].split(":", 2);
-        if (tipoPartes.length != 2 || !tipoPartes[0].equals("TIPO")) {
-            return "Formato de TIPO incorrecto";
-        }
-
-        return "Formato válido pero operación no reconocida";
+        return "Formato válido";
     }
 }

@@ -39,9 +39,8 @@ public class Cliente {
             salida = new PrintWriter(socket.getOutputStream(), true);
             entrada = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-            // Enviar nombre al servidor como trama de registro
-            Frame registroFrame = new Frame("REGISTRO").campo("USUARIO", nombre);
-            enviarTrama(registroFrame);
+            // El servidor espera el nombre como primera línea (texto plano)
+            salida.println(nombre);
 
             // Iniciar thread para recibir mensajes
             new Thread(this::recibirMensajes).start();
@@ -80,67 +79,60 @@ public class Cliente {
     }
 
     /**
-     * Crea y envía una trama de depósito
+     * Crea y envía una trama de DEPOSITO
+     * Formato: TRANSAC|DEPOSITO|CUENTA_ORIGEN|CUENTA_DESTINO|MONTO|CONCEPTO
      */
-    public void enviarDeposito(long cuenta, double monto) {
-        Frame trama = new Frame("DEPOSITO")
-            .campo("CUENTA", cuenta)
-            .campo("MONTO", monto);
+    public void enviarDeposito(long miCuenta, long cuentaDestino, double monto, String concepto) {
+        Frame trama = new Frame(protocol.ProtocolConstants.TIPO_DEPOSITO, miCuenta, cuentaDestino, monto, concepto);
         enviarTrama(trama);
+        System.out.println("[CLIENTE] Depósito enviado: $" + monto + " a cuenta " + cuentaDestino);
     }
 
     /**
-     * Crea y envía una trama de retiro
+     * Crea y envía una trama de RETIRO
+     * Formato: TRANSAC|RETIRO|CUENTA_ORIGEN|9999|MONTO|CONCEPTO
      */
-    public void enviarRetiro(long cuenta, double monto) {
-        Frame trama = new Frame("RETIRO")
-            .campo("CUENTA", cuenta)
-            .campo("MONTO", monto);
+    public void enviarRetiro(long miCuenta, double monto, String concepto) {
+        Frame trama = new Frame(protocol.ProtocolConstants.TIPO_RETIRO, miCuenta, 9999L, monto, concepto);
         enviarTrama(trama);
+        System.out.println("[CLIENTE] Retiro enviado: $" + monto + " de cuenta " + miCuenta);
     }
 
     /**
-     * Crea y envía una trama de consulta
+     * Crea y envía una trama de CONSULTA
+     * Formato: TRANSAC|CONSULTA|CUENTA_ORIGEN|9999|0.0|CONCEPTO
      */
-    public void enviarConsulta(long cuenta) {
-        Frame trama = new Frame("CONSULTA")
-            .campo("CUENTA", cuenta);
+    public void enviarConsulta(long miCuenta, String concepto) {
+        Frame trama = new Frame(protocol.ProtocolConstants.TIPO_CONSULTA, miCuenta, 9999L, 0.0, concepto);
         enviarTrama(trama);
+        System.out.println("[CLIENTE] Consulta enviada para cuenta " + miCuenta);
     }
 
     /**
-     * Crea y envía una trama de transferencia
+     * Crea y envía una trama de TRANSFERENCIA
+     * Formato: TRANSAC|TRANSFERENCIA|CUENTA_ORIGEN|CUENTA_DESTINO|MONTO|CONCEPTO
      */
-    public void enviarTransferencia(long cuentaOrigen, long cuentaDestino, double monto) {
-        Frame trama = new Frame("TRANSFERENCIA")
-            .campo("CUENTA_ORIGEN", cuentaOrigen)
-            .campo("CUENTA_DESTINO", cuentaDestino)
-            .campo("MONTO", monto);
+    public void enviarTransferencia(long cuentaOrigen, long cuentaDestino, double monto, String concepto) {
+        Frame trama = new Frame(protocol.ProtocolConstants.TIPO_TRANSFERENCIA, cuentaOrigen, cuentaDestino, monto, concepto);
         enviarTrama(trama);
+        System.out.println("[CLIENTE] Transferencia enviada: $" + monto + " de " + cuentaOrigen + " a " + cuentaDestino);
     }
 
     private void recibirMensajes() {
         try {
             String linea;
             while ((linea = entrada.readLine()) != null) {
-                // Intentar parsear como trama
-                if (linea.startsWith("<INICIO>")) {
+                // Intentar parsear como trama del protocolo del banco
+                if (linea.startsWith("TRANSAC") || linea.startsWith("RESPUESTA")) {
                     Frame frame = FrameParser.parsear(linea);
-                    if (frame != null) {
-                        if (listener != null) {
-                            listener.onTramaRecibida(frame);
-                        }
-                        // También enviar como texto para compatibilidad
-                        if (listener != null) {
-                            listener.onMensajeRecibido(formatearTrama(frame));
-                        }
-                    } else {
-                        if (listener != null) {
-                            listener.onError("Trama mal formada: " + linea);
-                        }
+                    if (frame != null && listener != null) {
+                        listener.onTramaRecibida(frame);
+                        listener.onMensajeRecibido(formatearTrama(frame));
+                    } else if (listener != null) {
+                        listener.onError("Trama mal formada: " + linea);
                     }
                 } else {
-                    // Mensaje de texto plano
+                    // Mensaje de texto plano (compatibilidad)
                     if (listener != null) {
                         listener.onMensajeRecibido(linea);
                     }
@@ -157,30 +149,25 @@ public class Cliente {
      * Formatea una trama para mostrarla de manera legible
      */
     private String formatearTrama(Frame frame) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("[").append(frame.getTipo()).append("] ");
-        
-        switch (frame.getTipo()) {
-            case "RESPUESTA":
-                sb.append(frame.obtener("ESTADO")).append(" - ").append(frame.obtener("MENSAJE"));
-                if (frame.existe("SALDO")) {
-                    sb.append(" | Saldo: $").append(frame.obtener("SALDO"));
-                }
-                break;
-            default:
-                for (var entry : frame.getCampos().entrySet()) {
-                    sb.append(entry.getKey()).append(": ").append(entry.getValue()).append(" ");
-                }
+        if (frame.esRespuesta()) {
+            String status = frame.getStatus();
+            String descripcion = frame.getDescripcion();
+            
+            if ("OK".equalsIgnoreCase(status)) {
+                return "✓ " + descripcion;
+            } else {
+                return "❌ " + descripcion;
+            }
+        } else {
+            return "[" + frame.getTipoOperacion() + "] Solicitud enviada";
         }
-        
-        return sb.toString();
     }
 
     public void desconectar() {
         try {
             if (salida != null) {
-                Frame desconexionFrame = new Frame("DESCONEXION");
-                salida.println(desconexionFrame.toString());
+                // Enviar comando simple de desconexión
+                salida.println("DESCONECTAR");
             }
             if (socket != null) {
                 socket.close();

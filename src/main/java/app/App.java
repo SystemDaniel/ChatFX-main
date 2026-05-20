@@ -73,11 +73,11 @@ public class App extends Application {
         btnCliente.setStyle("-fx-font-size: 14; -fx-padding: 10; -fx-background-color: #4CAF50; -fx-text-fill: white; -fx-cursor: hand;");
         btnCliente.setOnAction(e -> abrirChat());
 
-        Button btnAmbos = new Button("Abrir Servidor y Cliente");
+        /**Button btnAmbos = new Button("Abrir Servidor y Cliente");
         btnAmbos.setPrefHeight(50);
         btnAmbos.setPrefWidth(300);
         btnAmbos.setStyle("-fx-font-size: 14; -fx-padding: 10; -fx-background-color: #FF9800; -fx-text-fill: white; -fx-cursor: hand;");
-        btnAmbos.setOnAction(e -> abrirAmbos());
+        btnAmbos.setOnAction(e -> abrirAmbos());*/
 
         Button btnSalir = new Button("Cerrar Sesión");
         btnSalir.setPrefHeight(50);
@@ -96,7 +96,7 @@ public class App extends Application {
                 subtitulo,
                 btnServidor,
                 btnCliente,
-                btnAmbos,
+                //btnAmbos,
                 new Label(),
                 btnSalir
         );
@@ -141,7 +141,7 @@ public class App extends Application {
         }
     }
 
-    private void abrirAmbos() {
+    /**private void abrirAmbos() {
         iniciarServidor();
         try {
             Thread.sleep(1000);
@@ -149,7 +149,7 @@ public class App extends Application {
             e.printStackTrace();
         }
         abrirChat();
-    }
+    }*/
 
     public static void main(String[] args) {
         launch(args);

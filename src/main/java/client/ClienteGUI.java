@@ -226,53 +226,89 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
         campoMiCuenta.setStyle("-fx-font-size: 12; -fx-padding: 8; -fx-opacity: 0.8; -fx-control-inner-background: #e8f4f8;");
         campoMiCuenta.setPrefHeight(32);
 
-        // Campos para transacciones
-        Label lblCuenta = new Label("Cuenta Destino:");
-        TextField campoCuenta = new TextField();
-        campoCuenta.setPromptText("Ej: 10000001");
-        campoCuenta.setText("10000001");
+        // DEPÓSITO - Cuenta destino y monto
+        Label lblCuentaDestino = new Label("Cuenta Destino (Depósito):");
+        TextField campoCuentaDestino = new TextField();
+        campoCuentaDestino.setPromptText("Ej: 10000001");
+        campoCuentaDestino.setText("10000001");
 
         Label lblMonto = new Label("Monto:");
         TextField campoMonto = new TextField();
         campoMonto.setPromptText("Ej: 100.00");
 
+        Label lblConcepto = new Label("Concepto/Descripción:");
+        TextField campoConcepto = new TextField();
+        campoConcepto.setPromptText("Ej: Pago de servicios");
+        campoConcepto.setText("Operación bancaria");
+
         // Botones de operaciones
         btnDeposito = new Button("DEPÓSITO");
-        btnDeposito.setPrefWidth(130);
+        btnDeposito.setPrefWidth(100);
         btnDeposito.setStyle("-fx-font-size: 11; -fx-padding: 8; -fx-background-color: #4CAF50; -fx-text-fill: white;");
         btnDeposito.setDisable(true);
         btnDeposito.setOnAction(e -> {
             try {
-                long cuenta = Long.parseLong(campoCuenta.getText().trim());
+                long miCuenta = Long.parseLong(campoMiCuenta.getText().trim());
+                long cuentaDest = Long.parseLong(campoCuentaDestino.getText().trim());
                 double monto = Double.parseDouble(campoMonto.getText().trim());
-                cliente.enviarDeposito(cuenta, monto);
+                String concepto = campoConcepto.getText().trim();
+                
+                cliente.enviarDeposito(miCuenta, cuentaDest, monto, concepto);
+                ultimoTipoOperacion = "DEPOSITO";
+                ultimoMonto = monto;
             } catch (NumberFormatException ex) {
                 mostrarAlerta("Error", "Datos inválidos");
             }
         });
 
         btnRetiro = new Button("RETIRO");
-        btnRetiro.setPrefWidth(130);
+        btnRetiro.setPrefWidth(100);
         btnRetiro.setStyle("-fx-font-size: 11; -fx-padding: 8; -fx-background-color: #f44336; -fx-text-fill: white;");
         btnRetiro.setDisable(true);
         btnRetiro.setOnAction(e -> {
             try {
-                long cuenta = Long.parseLong(campoCuenta.getText().trim());
+                long miCuenta = Long.parseLong(campoMiCuenta.getText().trim());
                 double monto = Double.parseDouble(campoMonto.getText().trim());
-                cliente.enviarRetiro(cuenta, monto);
+                String concepto = campoConcepto.getText().trim();
+                
+                cliente.enviarRetiro(miCuenta, monto, concepto);
+                ultimoTipoOperacion = "RETIRO";
+                ultimoMonto = monto;
             } catch (NumberFormatException ex) {
                 mostrarAlerta("Error", "Datos inválidos");
             }
         });
 
         btnConsulta = new Button("CONSULTA");
-        btnConsulta.setPrefWidth(130);
+        btnConsulta.setPrefWidth(100);
         btnConsulta.setStyle("-fx-font-size: 11; -fx-padding: 8; -fx-background-color: #2196F3; -fx-text-fill: white;");
         btnConsulta.setDisable(true);
         btnConsulta.setOnAction(e -> {
             try {
-                long cuenta = Long.parseLong(campoCuenta.getText().trim());
-                cliente.enviarConsulta(cuenta);
+                long miCuenta = Long.parseLong(campoMiCuenta.getText().trim());
+                String concepto = campoConcepto.getText().trim();
+                
+                cliente.enviarConsulta(miCuenta, concepto);
+                ultimoTipoOperacion = "CONSULTA";
+            } catch (NumberFormatException ex) {
+                mostrarAlerta("Error", "Datos inválidos");
+            }
+        });
+
+        Button btnTransferencia = new Button("TRANSFER.");
+        btnTransferencia.setPrefWidth(75);
+        btnTransferencia.setStyle("-fx-font-size: 11; -fx-padding: 8; -fx-background-color: #9C27B0; -fx-text-fill: white;");
+        btnTransferencia.setDisable(true);
+        btnTransferencia.setOnAction(e -> {
+            try {
+                long miCuenta = Long.parseLong(campoMiCuenta.getText().trim());
+                long cuentaDest = Long.parseLong(campoCuentaDestino.getText().trim());
+                double monto = Double.parseDouble(campoMonto.getText().trim());
+                String concepto = campoConcepto.getText().trim();
+                
+                cliente.enviarTransferencia(miCuenta, cuentaDest, monto, concepto);
+                ultimoTipoOperacion = "TRANSFERENCIA";
+                ultimoMonto = monto;
             } catch (NumberFormatException ex) {
                 mostrarAlerta("Error", "Datos inválidos");
             }
@@ -285,10 +321,10 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
         btnVoucher.setOnAction(e -> generarYGuardarVoucher());
 
         HBox botones1 = new HBox(5);
-        botones1.getChildren().addAll(btnDeposito, btnRetiro);
+        botones1.getChildren().addAll(btnDeposito, btnRetiro, btnConsulta);
 
         HBox botones2 = new HBox(5);
-        botones2.getChildren().addAll(btnConsulta);
+        botones2.getChildren().addAll(btnTransferencia);
         
         HBox botones3 = new HBox(5);
         botones3.getChildren().addAll(btnVoucher);
@@ -308,8 +344,9 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
             titulo,
             lblMiCuenta, campoMiCuenta,
             new Separator(),
-            lblCuenta, campoCuenta,
+            lblCuentaDestino, campoCuentaDestino,
             lblMonto, campoMonto,
+            lblConcepto, campoConcepto,
             new Separator(),
             botones1, botones2, botones3,
             new Separator(),
@@ -507,42 +544,22 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
      */
     private String formatearTramaParaMostrar(Frame frame) {
         StringBuilder sb = new StringBuilder();
-        String tipo = frame.getTipo();
 
-        if ("RESPUESTA".equals(tipo)) {
-            String estado = frame.obtener("ESTADO");
-            String mensaje = frame.obtener("MENSAJE");
+        if (frame.esRespuesta()) {
+            String estado = frame.getStatus(); // Equivale a obtener(1)
+            String mensaje = frame.getDescripcion(); // Equivale a obtener(2)
             
             sb.append("[RESPUESTA] ");
-            if ("OK".equals(estado)) {
+            if ("OK".equalsIgnoreCase(estado) || "CONEXION".equalsIgnoreCase(estado)) {
                 sb.append("✓ ").append(mensaje);
-                
-                if (frame.existe("CUENTA")) {
-                    sb.append(" | Cuenta: ").append(frame.obtener("CUENTA"));
-                }
-                if (frame.existe("SALDO")) {
-                    sb.append(" | Saldo: $").append(frame.obtener("SALDO"));
-                }
-                if (frame.existe("MONTO_DEPOSITADO")) {
-                    sb.append(" | Monto Depositado: $").append(frame.obtener("MONTO_DEPOSITADO"));
-                }
-                if (frame.existe("MONTO_RETIRADO")) {
-                    sb.append(" | Monto Retirado: $").append(frame.obtener("MONTO_RETIRADO"));
-                }
             } else {
                 sb.append("✗ ").append(mensaje);
-                if (frame.existe("CODIGO")) {
-                    sb.append(" [").append(frame.obtener("CODIGO")).append("]");
-                }
             }
-        } else if ("NOTIFICACION".equals(tipo)) {
-            String tipoNotif = frame.obtener("TIPO");
-            String usuario = frame.obtener("USUARIO");
-            sb.append("[NOTIFICACIÓN] ").append(usuario).append(" se ha ").append(tipoNotif.toLowerCase());
         } else {
-            sb.append("[").append(tipo).append("] ");
-            for (var entry : frame.getCampos().entrySet()) {
-                sb.append(entry.getKey()).append(": ").append(entry.getValue()).append(" ");
+            sb.append("[").append(frame.getTipoOperacion()).append("] ");
+            sb.append("Cuenta: ").append(frame.getCuentaOrigen());
+            if (frame.getMonto() > 0) {
+                sb.append(" | Monto: $").append(frame.getMonto());
             }
         }
 

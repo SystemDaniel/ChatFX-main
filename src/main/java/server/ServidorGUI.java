@@ -314,26 +314,14 @@ class ClientHandlerGUI implements Runnable {
     @Override
     public void run() {
         try {
-            String primeraLinea = entrada.readLine();
-            
-            if (primeraLinea != null && primeraLinea.startsWith("<INICIO>")) {
-                Frame registroFrame = FrameParser.parsear(primeraLinea);
-                if (registroFrame != null && registroFrame.getTipo().equals("REGISTRO")) {
-                    this.nombre = registroFrame.obtener("USUARIO");
-                } else {
-                    this.nombre = "Cliente_" + System.currentTimeMillis() % 1000;
-                }
-            } else {
-                this.nombre = primeraLinea != null ? primeraLinea : "Cliente_" + System.currentTimeMillis() % 1000;
-            }
+            // El primer mensaje es el nombre del cliente
+            String lineaNombre = entrada.readLine();
+            this.nombre = (lineaNombre != null && !lineaNombre.isEmpty()) ? lineaNombre : "Cliente_" + System.currentTimeMillis() % 1000;
             
             servidor.log("[CONEXIÓN] " + nombre + " conectado desde " + socket.getInetAddress().getHostAddress());
             servidor.actualizarListaClientes();
             
-            Frame notificacion = new Frame("NOTIFICACION")
-                .campo("TIPO", "CONEXION")
-                .campo("USUARIO", nombre)
-                .campo("MENSAJE", nombre + " se ha conectado");
+            Frame notificacion = new Frame("CONEXION", nombre + " se ha conectado");
             servidor.difundirTrama(notificacion, this);
 
             String linea;
@@ -349,9 +337,7 @@ class ClientHandlerGUI implements Runnable {
                 e.printStackTrace();
             }
             servidor.removerCliente(this);
-            Frame notificacion = new Frame("NOTIFICACION")
-                .campo("TIPO", "DESCONEXION")
-                .campo("USUARIO", nombre);
+            Frame notificacion = new Frame("DESCONEXION", nombre + " se ha desconectado");
             servidor.difundirTrama(notificacion, this);
             servidor.log("[DESCONEXIÓN] " + nombre + " desconectado");
         }
@@ -362,13 +348,11 @@ class ClientHandlerGUI implements Runnable {
             return;
         }
 
-        if (linea.startsWith("<INICIO>")) {
+        // Detectar si es una trama de protocolo (empieza con TRANSAC o RESPUESTA)
+        if (linea.startsWith("TRANSAC") || linea.startsWith("RESPUESTA")) {
             Frame frame = FrameParser.parsear(linea);
             if (frame == null) {
-                Frame error = new Frame("RESPUESTA")
-                    .campo("ESTADO", "ERROR")
-                    .campo("MENSAJE", "Trama mal formada")
-                    .campo("CODIGO", "TRAMA_INVALIDA");
+                Frame error = new Frame("ERROR", "Trama mal formada (TRAMA_INVALIDA)");
                 enviarTrama(error);
                 servidor.log("[ERROR] Trama mal formada de " + nombre);
                 return;
@@ -385,9 +369,15 @@ class ClientHandlerGUI implements Runnable {
     }
 
     private void procesarTrama(Frame trama) {
-        servidor.log("[TRAMA] Tipo: " + trama.getTipo() + " De: " + nombre);
+        if (trama.esRespuesta()) {
+            servidor.log("[TRAMA] Respuesta recibida de " + nombre + ": " + trama.getStatus());
+            return;
+        }
+
+        String tipoOp = trama.getTipoOperacion();
+        servidor.log("[TRAMA] Tipo: " + tipoOp + " De: " + nombre);
         
-        switch (trama.getTipo().toUpperCase()) {
+        switch (tipoOp.toUpperCase()) {
             case "DEPOSITO":
             case "RETIRO":
             case "CONSULTA":
@@ -400,10 +390,7 @@ class ClientHandlerGUI implements Runnable {
                 break;
             
             default:
-                Frame respuesta = new Frame("RESPUESTA")
-                    .campo("ESTADO", "ERROR")
-                    .campo("MENSAJE", "Tipo de operación no soportada: " + trama.getTipo())
-                    .campo("CODIGO", "OPERACION_NO_SOPORTADA");
+                Frame respuesta = new Frame("ERROR", "Operación no soportada: " + tipoOp);
                 enviarTrama(respuesta);
                 break;
         }
@@ -419,13 +406,9 @@ class ClientHandlerGUI implements Runnable {
         StringBuilder log = new StringBuilder();
         log.append("[TRANSACCION] ");
         log.append("Usuario: ").append(nombre).append(" | ");
-        log.append("Tipo: ").append(solicitud.getTipo()).append(" | ");
-        log.append("Estado: ").append(respuesta.obtener("ESTADO")).append(" | ");
-        log.append("Mensaje: ").append(respuesta.obtener("MENSAJE"));
-        
-        if (respuesta.existe("CUENTA")) {
-            log.append(" | Cuenta: ").append(respuesta.obtener("CUENTA"));
-        }
+        log.append("Tipo: ").append(solicitud.getTipoOperacion()).append(" | ");
+        log.append("Estado: ").append(respuesta.getStatus()).append(" | ");
+        log.append("Mensaje: ").append(respuesta.getDescripcion());
         
         servidor.log(log.toString());
     }
