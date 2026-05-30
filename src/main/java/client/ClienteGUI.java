@@ -35,6 +35,7 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
     private Button btnDeposito;
     private Button btnRetiro;
     private Button btnConsulta;
+    private Button btnTransferencia;
     private Button btnVoucher;
     
     // Variables de transacción (para generar voucher)
@@ -43,6 +44,7 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
     private double ultimoMonto = 0;
     private double ultimoSaldoAnterior = 0;
     private double ultimoSaldoNuevo = 0;
+    private String ultimaCuentaDestino = "";
     private File ultimoArchivoVoucher = null;
     
     // Número de cuenta único
@@ -222,7 +224,7 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
         
         TextField campoMiCuenta = new TextField();
         campoMiCuenta.setText(numeroCuentaUsuario);
-        campoMiCuenta.setEditable(false);
+        campoMiCuenta.setEditable(true);
         campoMiCuenta.setStyle("-fx-font-size: 12; -fx-padding: 8; -fx-opacity: 0.8; -fx-control-inner-background: #e8f4f8;");
         campoMiCuenta.setPrefHeight(32);
 
@@ -253,9 +255,11 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
                 double monto = Double.parseDouble(campoMonto.getText().trim());
                 String concepto = campoConcepto.getText().trim();
                 
+                ultimoNumeroTransaccion = "TRANS_" + System.currentTimeMillis();
                 cliente.enviarDeposito(miCuenta, cuentaDest, monto, concepto);
                 ultimoTipoOperacion = "DEPOSITO";
                 ultimoMonto = monto;
+                ultimaCuentaDestino = String.valueOf(cuentaDest);
             } catch (NumberFormatException ex) {
                 mostrarAlerta("Error", "Datos inválidos");
             }
@@ -271,6 +275,7 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
                 double monto = Double.parseDouble(campoMonto.getText().trim());
                 String concepto = campoConcepto.getText().trim();
                 
+                ultimoNumeroTransaccion = "TRANS_" + System.currentTimeMillis();
                 cliente.enviarRetiro(miCuenta, monto, concepto);
                 ultimoTipoOperacion = "RETIRO";
                 ultimoMonto = monto;
@@ -295,7 +300,7 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
             }
         });
 
-        Button btnTransferencia = new Button("TRANSFER.");
+        btnTransferencia = new Button("TRANSFER.");
         btnTransferencia.setPrefWidth(75);
         btnTransferencia.setStyle("-fx-font-size: 11; -fx-padding: 8; -fx-background-color: #9C27B0; -fx-text-fill: white;");
         btnTransferencia.setDisable(true);
@@ -306,9 +311,11 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
                 double monto = Double.parseDouble(campoMonto.getText().trim());
                 String concepto = campoConcepto.getText().trim();
                 
+                ultimoNumeroTransaccion = "TRANS_" + System.currentTimeMillis();
                 cliente.enviarTransferencia(miCuenta, cuentaDest, monto, concepto);
                 ultimoTipoOperacion = "TRANSFERENCIA";
                 ultimoMonto = monto;
+                ultimaCuentaDestino = String.valueOf(cuentaDest);
             } catch (NumberFormatException ex) {
                 mostrarAlerta("Error", "Datos inválidos");
             }
@@ -488,6 +495,13 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
         Platform.runLater(() -> {
             String respuesta = formatearTramaParaMostrar(frame);
             agregarMensajeBurbuja("SERVIDOR", respuesta, false);
+            
+            // Capturar número de transacción si es una respuesta exitosa
+            if (frame.esRespuesta() && "OK".equalsIgnoreCase(frame.getStatus())) {
+                if (ultimoNumeroTransaccion.isEmpty()) {
+                    ultimoNumeroTransaccion = "TRANS_" + System.currentTimeMillis();
+                }
+            }
         });
     }
 
@@ -503,6 +517,7 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
                 btnDeposito.setDisable(false);
                 btnRetiro.setDisable(false);
                 btnConsulta.setDisable(false);
+                btnTransferencia.setDisable(false);
                 btnVoucher.setDisable(false);
                 
                 campoNombre.setDisable(true);
@@ -520,6 +535,7 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
                 btnDeposito.setDisable(true);
                 btnRetiro.setDisable(true);
                 btnConsulta.setDisable(true);
+                btnTransferencia.setDisable(true);
                 btnVoucher.setDisable(true);
                 
                 campoNombre.setDisable(false);
@@ -579,10 +595,11 @@ public class ClienteGUI extends Application implements Cliente.ClienteListener {
                 ultimoNumeroTransaccion,
                 ultimoTipoOperacion,
                 campoNombre.getText(),
-                "12345",
+                numeroCuentaUsuario,
                 ultimoMonto,
                 ultimoSaldoAnterior,
-                ultimoSaldoNuevo
+                ultimoSaldoNuevo,
+                ultimaCuentaDestino
             );
             
             // Crear carpeta Vouchers si no existe

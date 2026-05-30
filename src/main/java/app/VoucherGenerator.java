@@ -15,7 +15,7 @@ import java.util.Date;
 public class VoucherGenerator {
     
     private static final int ANCHO = 400;
-    private static final int ALTO = 600;
+    private static final int ALTO = 700;
     private static final Color COLOR_FONDO = Color.WHITE;
     private static final Color COLOR_ENCABEZADO = new Color(33, 150, 243);
     private static final Color COLOR_TEXTO = Color.BLACK;
@@ -25,6 +25,7 @@ public class VoucherGenerator {
     private String tipoOperacion;
     private String usuario;
     private String numeroCuenta;
+    private String numeroCuentaDestino;
     private double monto;
     private double saldoAnterior;
     private double saldoNuevo;
@@ -34,10 +35,17 @@ public class VoucherGenerator {
     public VoucherGenerator(String numeroTransaccion, String tipoOperacion, String usuario,
                            String numeroCuenta, double monto, double saldoAnterior, 
                            double saldoNuevo) {
+        this(numeroTransaccion, tipoOperacion, usuario, numeroCuenta, monto, saldoAnterior, saldoNuevo, "");
+    }
+    
+    public VoucherGenerator(String numeroTransaccion, String tipoOperacion, String usuario,
+                           String numeroCuenta, double monto, double saldoAnterior, 
+                           double saldoNuevo, String numeroCuentaDestino) {
         this.numeroTransaccion = numeroTransaccion;
         this.tipoOperacion = tipoOperacion;
         this.usuario = usuario;
         this.numeroCuenta = numeroCuenta;
+        this.numeroCuentaDestino = numeroCuentaDestino != null ? numeroCuentaDestino : "";
         this.monto = monto;
         this.saldoAnterior = saldoAnterior;
         this.saldoNuevo = saldoNuevo;
@@ -81,7 +89,12 @@ public class VoucherGenerator {
         y = dibujarCampo(g2d, y, "Tipo:", tipoOperacion);
         y = dibujarCampo(g2d, y, "Transacción:", numeroTransaccion);
         y = dibujarCampo(g2d, y, "Usuario:", usuario);
-        y = dibujarCampo(g2d, y, "Cuenta:", numeroCuenta);
+        y = dibujarCampo(g2d, y, "Cuenta Origen:", numeroCuenta);
+        
+        // Mostrar cuenta destino si es una transferencia
+        if (!numeroCuentaDestino.isEmpty() && !numeroCuentaDestino.equals("9999")) {
+            y = dibujarCampo(g2d, y, "Cuenta Destino:", numeroCuentaDestino);
+        }
         y += 10;
         
         // Línea separadora

@@ -87,10 +87,10 @@ public class TransactionProcessor {
                 return new Frame(ProtocolConstants.STATUS_ERROR, ProtocolConstants.ERR_MONTO_INVALIDO);
             }
 
-            // Validar cuenta destino
-            BankAccount cuenta = cuentas.get(cuentaDestino);
+            // Validar o crear cuenta destino
+            BankAccount cuenta = obtenerOCrearCuentaExterna(cuentaDestino);
             if (cuenta == null) {
-                System.out.println("[BANCO] Depósito rechazado: Cuenta " + cuentaDestino + " no existe");
+                System.out.println("[BANCO] Depósito rechazado: Cuenta " + cuentaDestino + " inválida");
                 return new Frame(ProtocolConstants.STATUS_ERROR, ProtocolConstants.ERR_CUENTA_NO_EXISTE);
             }
 
@@ -99,7 +99,7 @@ public class TransactionProcessor {
             cuenta.depositar(monto);
             double saldoNuevo = cuenta.getSaldo();
 
-            String respuesta = String.format("Depósito exitoso. Saldo anterior: $%.2f, Nuevo: $%.2f", saldoAnterior, saldoNuevo);
+            String respuesta = String.format("Depósito exitoso de $%.2f a cuenta %d. Saldo anterior: $%.2f, Nuevo: $%.2f", monto, cuentaDestino, saldoAnterior, saldoNuevo);
             System.out.println("[BANCO] ✓ " + respuesta);
             
             registrarTransaccion(ProtocolConstants.TIPO_DEPOSITO, cuentaDestino, monto, ProtocolConstants.STATUS_OK);
@@ -254,12 +254,17 @@ public class TransactionProcessor {
                 return new Frame(ProtocolConstants.STATUS_ERROR, ProtocolConstants.ERR_CUENTA_ORIGEN_IGUAL_DESTINO);
             }
 
-            // Validar ambas cuentas
+            // Validar cuenta origen
             BankAccount origen = cuentas.get(cuentaOrigen);
-            BankAccount destino = cuentas.get(cuentaDestino);
+            if (origen == null) {
+                System.out.println("[BANCO] Transferencia rechazada: Cuenta origen no existe");
+                return new Frame(ProtocolConstants.STATUS_ERROR, ProtocolConstants.ERR_CUENTA_NO_EXISTE);
+            }
 
-            if (origen == null || destino == null) {
-                System.out.println("[BANCO] Transferencia rechazada: Cuenta no existe");
+            // Validar o crear cuenta destino
+            BankAccount destino = obtenerOCrearCuentaExterna(cuentaDestino);
+            if (destino == null) {
+                System.out.println("[BANCO] Transferencia rechazada: Cuenta destino inválida");
                 return new Frame(ProtocolConstants.STATUS_ERROR, ProtocolConstants.ERR_CUENTA_NO_EXISTE);
             }
 
@@ -275,7 +280,8 @@ public class TransactionProcessor {
             origen.retirar(monto);
             destino.depositar(monto);
 
-            String respuesta = String.format("Transferencia exitosa. De $%.2f a $%.2f", saldoOrigenAntes, saldoDestinoAntes);
+            String respuesta = String.format("Transferencia exitosa de $%.2f a cuenta %d. Saldo anterior: $%.2f, Nuevo: $%.2f", 
+                monto, cuentaDestino, saldoOrigenAntes, origen.getSaldo());
             System.out.println("[BANCO] ✓ " + respuesta);
             
             registrarTransaccion(ProtocolConstants.TIPO_TRANSFERENCIA, cuentaOrigen, monto, ProtocolConstants.STATUS_OK);
@@ -313,6 +319,55 @@ public class TransactionProcessor {
      */
     public Collection<BankAccount> obtenerTodasLasCuentas() {
         return new ArrayList<>(cuentas.values());
+    }
+
+    /**
+     * Valida si una cuenta es válida (existe o puede crearse)
+     * Cuentas válidas: 8 dígitos o cuentas registradas en el sistema
+     */
+    public boolean esCuentaValida(long numeroCuenta) {
+        // Si ya existe, es válida
+        if (cuentas.containsKey(numeroCuenta)) {
+            return true;
+        }
+        
+        // Si es de 8 dígitos, se permite como cuenta externa
+        String numStr = String.valueOf(numeroCuenta);
+        return numStr.length() == 8;
+    }
+
+    /**
+     * Registra una cuenta externa (de 8 dígitos)
+     * Las cuentas externas se crean con saldo 0 al ser primero usadas
+     */
+    public void registrarCuentaExterna(long numeroCuenta, String titular) {
+        if (!cuentas.containsKey(numeroCuenta)) {
+            // Validar que sea de 8 dígitos
+            String numStr = String.valueOf(numeroCuenta);
+            if (numStr.length() == 8) {
+                cuentas.put(numeroCuenta, new BankAccount(numeroCuenta, titular, 0.0));
+                System.out.println("[BANCO] Cuenta externa registrada: " + numeroCuenta + " (" + titular + ")");
+            }
+        }
+    }
+
+    /**
+     * Obtiene o crea una cuenta externa
+     */
+    public BankAccount obtenerOCrearCuentaExterna(long numeroCuenta) {
+        if (cuentas.containsKey(numeroCuenta)) {
+            return cuentas.get(numeroCuenta);
+        }
+        
+        String numStr = String.valueOf(numeroCuenta);
+        if (numStr.length() == 8) {
+            BankAccount nuevaCuenta = new BankAccount(numeroCuenta, "Cuenta Externa", 0.0);
+            cuentas.put(numeroCuenta, nuevaCuenta);
+            System.out.println("[BANCO] Cuenta externa creada automáticamente: " + numeroCuenta);
+            return nuevaCuenta;
+        }
+        
+        return null;
     }
 
     /**
